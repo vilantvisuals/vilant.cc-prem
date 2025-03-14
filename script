@@ -1,8 +1,8 @@
- Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/refs/heads/main/Library.lua'))()
+Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/refs/heads/main/Library.lua'))()
 
     Window = Library:CreateWindow({
 
-    Title = 'Vilant Exploit | v1.8 | by @fazefr0',
+    Title = 'Vilant Exploit V2   |   discord.gg/VfmXpbgC9E',
     Center = true,
     AutoShow = true,
     TabPadding = 9
@@ -11,7 +11,6 @@
     Tabs = {
     Main = Window:AddTab('Main'),
     Visuals = Window:AddTab('Visuals'),
-    Movement = Window:AddTab('Movement'),
     Misc = Window:AddTab('Misc'),
     Teleport = Window:AddTab('Teleport'),
     }
@@ -232,10 +231,6 @@ LeftGroupBox = Tabs.Main:AddLeftGroupbox('Aimbot')
     
         -- Update loop to continuously follow the locked target for aimlock
         if cursorLocked and _G.aimlock and targetHead then
-            -- Handle ragelock to auto lock onto next target if necessary
-            if ragelock then
-                HandleRageLock()  -- Call the function to handle RageLock auto-targeting
-            end
     
             -- Check if the locked player is knocked or grabbed and unlock if necessary
             if IsPlayerKnockedOrGrabbed(targetPlayer) then
@@ -285,27 +280,17 @@ LeftGroupBox = Tabs.Main:AddLeftGroupbox('Aimbot')
         Tooltip = 'Locks your aim onto players heads',
         Callback = function(Value)
             _G.aimlock = Value
-            print('[cb] Aimlock changed to:', Value)
+            print('[cb] Aimbot changed to:', Value)
             if _G.aimlock then
                 cursorLocked = false  -- Ensure cursor is not locked when aimlock is turned on
             end
         end
     })
     
-    LeftGroupBox:AddToggle('RageLock', {
-        Text = 'RageLock',
-        Default = false,
-        Tooltip = 'Automatically locks onto the next available player',
-        Callback = function(Value)
-            ragelock = Value
-            print('[cb] RageLock changed to:', Value)
-        end
-    })
-    
     LeftGroupBox:AddToggle('OrbitFeature', {
-        Text = 'Orbit Around Target',
+        Text = 'Target Strafe',
         Default = false,
-        Tooltip = 'Toggle to start orbiting around the player you lock onto.',
+        Tooltip = 'Toggle to start strafing around the player you lock onto.',
         Callback = function(value)
             orbitActive = value  -- Directly set orbitActive based on toggle state
             if orbitActive and cursorLocked then
@@ -318,12 +303,12 @@ LeftGroupBox = Tabs.Main:AddLeftGroupbox('Aimbot')
     
     -- Add Toggle for Highlights
     LeftGroupBox:AddToggle('HighlightsToggle', {
-        Text = 'Highlights',
+        Text = 'Chams',
         Default = highlightsEnabled,
-        Tooltip = 'Toggle to enable or disable highlights',
+        Tooltip = 'Toggle to enable or disable Chams',
         Callback = function(Value)
             highlightsEnabled = Value
-            print('[cb] Highlights toggled:', Value)
+            print('[cb] Chams toggled:', Value)
             if not Value then
                 -- Destroy highlights if they exist
                 if previewHighlight then
@@ -337,12 +322,84 @@ LeftGroupBox = Tabs.Main:AddLeftGroupbox('Aimbot')
             end
         end
     })
+
+LeftGroupBox:AddToggle('MyToggle', {
+        Text = 'Rapid Fire',
+        Default = false, -- Default value (true / false)
+        Tooltip = 'Rapid Fire is better for some', -- Information shown when you hover over the toggle
+    
+        Callback = function(Value)
+    
+            -- Ensure script state is toggled correctly on each execution
+            if _G.gunActivation == nil then
+                _G.gunActivation = false  -- Default value if not previously set
+            end
+    
+            -- Toggle script state
+            _G.gunActivation = not _G.gunActivation
+    
+            -- Store frequently used Enum values in variables
+            local UserInputType = Enum.UserInputType
+            local MouseButton1 = UserInputType.MouseButton1
+    
+            if _G.gunActivation then
+                local player = game.Players.LocalPlayer
+                local userInputService = game:GetService("UserInputService")
+                local runService = game:GetService("RunService")
+                local isActive = false  -- Tracks whether the gun activation is enabled or not
+    
+                -- Function to continuously activate the held item (gun) at the fastest rate possible
+                local function continuouslyActivateHeldItem()
+                    while _G.gunActivation and runService.Heartbeat:Wait() do
+                        if isActive then
+                            local character = player.Character
+                            if character then
+                                local gunTool = character:FindFirstChildOfClass("Tool")
+                                if gunTool then
+                                    gunTool:Activate()
+                                end
+                            end
+                        end
+                    end
+                end
+    
+                local function onMouseClick(input, gameProcessedEvent)
+                    if gameProcessedEvent then return end
+    
+                    if input.UserInputType == MouseButton1 then
+                        isActive = true
+                    end
+                end
+    
+                local function onMouseRelease(input, gameProcessedEvent)
+                    if gameProcessedEvent then return end
+    
+                    if input.UserInputType == MouseButton1 then
+                        isActive = false
+                    end
+                end
+    
+                _G.mouseClickConnection = userInputService.InputBegan:Connect(onMouseClick)
+                _G.mouseReleaseConnection = userInputService.InputEnded:Connect(onMouseRelease)
+                spawn(continuouslyActivateHeldItem)
+            else
+                if _G.mouseClickConnection then
+                    _G.mouseClickConnection:Disconnect()
+                    _G.mouseClickConnection = nil
+                end
+                if _G.mouseReleaseConnection then
+                    _G.mouseReleaseConnection:Disconnect()
+                    _G.mouseReleaseConnection = nil
+                end
+            end
+        end
+    })   
     
     LeftGroupBox:AddLabel('Keybind'):AddKeyPicker('KeyPicker', {
         Default = 'C',
         SyncToggleState = false,
         Mode = 'Toggle',
-        Text = 'Aimlock',
+        Text = 'Aimbot',
         ChangedCallback = function(New)
             print('[cb] Keybind changed!', New)
             currentKeybind = New
@@ -362,20 +419,19 @@ LeftGroupBox = Tabs.Main:AddLeftGroupbox('Aimbot')
         end
     })
     
-    LeftGroupBox:AddLabel('Locked Highlight Color'):AddColorPicker('LockedColorPicker', {
+    LeftGroupBox:AddLabel('Locked Cham Color'):AddColorPicker('LockedColorPicker', {
         Default = lockedHighlightColor,
-        Title = 'Locked Player Highlight Color',
+        Title = 'Locked Cham Color',
         Transparency = 0,
         Callback = function(Value)
-            print('[cb] Locked Highlight Color changed!', Value)
+            print('[cb] Locked Cham Color changed!', Value)
             lockedHighlightColor = Value
             if lockedHighlight then
                 lockedHighlight.FillColor = Value
             end
         end
-    })
+    }) 
     
-    -- Add Smoothness Slider
     LeftGroupBox:AddSlider('SmoothnessSlider', {
         Text = 'Smoothness',
         Default = smoothness,
@@ -388,8 +444,8 @@ LeftGroupBox = Tabs.Main:AddLeftGroupbox('Aimbot')
         end
     })
     
-    LeftGroupBox:AddSlider('Orbit Speed', {
-        Text = 'Orbit Speed',
+    LeftGroupBox:AddSlider('Strafe Speed', {
+        Text = 'Strafe Speed',
         Default = orbitSpeed,
         Min = 0,
         Max = 100,
@@ -569,603 +625,7 @@ LeftGroupBox:AddSlider('MySlider', {
     end
 })
 
-LeftGroupBox = Tabs.Main:AddLeftGroupbox('Rapid Fire')
-
-    LeftGroupBox:AddToggle('MyToggle', {
-        Text = 'Rapid Fire',
-        Default = false, -- Default value (true / false)
-        Tooltip = 'Rapid Fire v2 is better for some', -- Information shown when you hover over the toggle
-    
-        Callback = function(Value)
-    
-            -- Ensure script state is toggled correctly on each execution
-            if _G.gunActivation == nil then
-                _G.gunActivation = false  -- Default value if not previously set
-            end
-    
-            -- Toggle script state
-            _G.gunActivation = not _G.gunActivation
-    
-            -- Store frequently used Enum values in variables
-            local UserInputType = Enum.UserInputType
-            local MouseButton1 = UserInputType.MouseButton1
-    
-            if _G.gunActivation then
-                local player = game.Players.LocalPlayer
-                local userInputService = game:GetService("UserInputService")
-                local runService = game:GetService("RunService")
-                local isActive = false  -- Tracks whether the gun activation is enabled or not
-    
-                -- Function to continuously activate the held item (gun) at the fastest rate possible
-                local function continuouslyActivateHeldItem()
-                    while _G.gunActivation and runService.Heartbeat:Wait() do
-                        if isActive then
-                            local character = player.Character
-                            if character then
-                                local gunTool = character:FindFirstChildOfClass("Tool")
-                                if gunTool then
-                                    gunTool:Activate()
-                                end
-                            end
-                        end
-                    end
-                end
-    
-                local function onMouseClick(input, gameProcessedEvent)
-                    if gameProcessedEvent then return end
-    
-                    if input.UserInputType == MouseButton1 then
-                        isActive = true
-                    end
-                end
-    
-                local function onMouseRelease(input, gameProcessedEvent)
-                    if gameProcessedEvent then return end
-    
-                    if input.UserInputType == MouseButton1 then
-                        isActive = false
-                    end
-                end
-    
-                _G.mouseClickConnection = userInputService.InputBegan:Connect(onMouseClick)
-                _G.mouseReleaseConnection = userInputService.InputEnded:Connect(onMouseRelease)
-                spawn(continuouslyActivateHeldItem)
-            else
-                if _G.mouseClickConnection then
-                    _G.mouseClickConnection:Disconnect()
-                    _G.mouseClickConnection = nil
-                end
-                if _G.mouseReleaseConnection then
-                    _G.mouseReleaseConnection:Disconnect()
-                    _G.mouseReleaseConnection = nil
-                end
-            end
-        end
-    })    
-
-LeftGroupBox = Tabs.Main:AddRightGroupbox('Hitbox Expander')
-
-    repeat wait() until game:IsLoaded()
-
-Players = game:GetService('Players')
-RunService = game:GetService('RunService')
-EnumMaterial = Enum.Material.Neon  -- Enum value for Material
-
--- Initialize global state
-_G.ToggleState = _G.ToggleState or false -- Default state
-_G.HITBOX_SIZE = Vector3.new(16, 16, 16)  -- Default hitbox size
-_G.HitboxColor = Color3.fromRGB(0, 0, 0)  -- Default hitbox color Black
-_G.HitboxTransparency = 0.8  -- Default transparency
-_G.OutlineColor = Color3.fromRGB(108, 59, 170) -- Default outline color Royal Purple
-_G.OutlineTransparency = 0  -- Default outline transparency
-_G.Disabled = not _G.ToggleState
-
--- UI setup (skip UI references here)
-LeftGroupBox:AddToggle('MyToggle', {
-    Text = 'Hitbox Expander',
-    Default = false,
-    Tooltip = 'Increases size of player Hitboxes for easier targeting',
-    Callback = function(Value)
-        _G.ToggleState = Value
-        _G.Disabled = not Value
-    end
-})
-
--- Color Pickers and Sliders for customization
-LeftGroupBox:AddLabel('Outline Color'):AddColorPicker('OutlineColorPicker', {
-    Default = Color3.new(0.4235, 0.2314, 0.6667), -- Royal Purple
-    Title = 'Outline Color',
-    Callback = function(Value) _G.OutlineColor = Value end
-})
-
-LeftGroupBox:AddLabel('Hitbox Color'):AddColorPicker('HitboxColorPicker', {
-    Default = Color3.new(0, 0, 0), -- Default Black
-    Title = 'Hitbox Color',
-    Callback = function(Value) _G.HitboxColor = Value end
-})
-
-LeftGroupBox:AddSlider('HitboxSizeSlider', {
-    Text = 'Size of the hitbox',
-    Default = 16,
-    Min = 5,
-    Max = 37.5,
-    Rounding = 1,
-    Callback = function(Value) _G.HITBOX_SIZE = Vector3.new(Value, Value, Value) end
-})
-
-LeftGroupBox:AddSlider('TransparencySlider', {
-    Text = 'Transparency of the hitbox',
-    Default = _G.HitboxTransparency,
-    Min = 0,
-    Max = 1,
-    Rounding = 1,
-    Callback = function(Value) _G.HitboxTransparency = Value end
-})
-
-LeftGroupBox:AddSlider('OutlineTransparencySlider', {
-    Text = 'Transparency of the outline',
-    Default = _G.OutlineTransparency,
-    Min = 0,
-    Max = 1,
-    Rounding = 1,
-    Callback = function(Value) _G.OutlineTransparency = Value end
-})
-
--- Object pooling for outlines
-outlinePool = {}
-
--- Function to get the outline or create it
-getOutline = function(part)
-    local outline = part:FindFirstChild("Outline")
-    if not outline then
-        outline = #outlinePool > 0 and table.remove(outlinePool) or Instance.new("SelectionBox")
-        outline.LineThickness = 0.05
-        outline.Color3 = _G.OutlineColor
-        outline.Name = "Outline"
-    end
-    outline.Adornee = part
-    outline.Parent = part
-    outline.Transparency = _G.OutlineTransparency
-    return outline
-end
-
--- Function to release the outline
-releaseOutline = function(outline)
-    outline.Adornee = nil
-    outline.Parent = nil
-    table.insert(outlinePool, outline)
-end
-
--- Throttle updates
-local lastUpdate = tick()
-
--- Function to batch and optimize updates
-updateHitboxes = function()
-    local now = tick()
-    if now - lastUpdate < 0.2 then -- Update every 0.2 seconds (5 times per second)
-        return
-    end
-    lastUpdate = now
-
-    -- Loop through players and update hitboxes
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= Players.LocalPlayer then
-            local character = player.Character
-            if character then
-                local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                if humanoidRootPart then
-                    local bodyEffects = character:FindFirstChild("BodyEffects")
-                    local isKOd = bodyEffects and bodyEffects:FindFirstChild("K.O") and bodyEffects["K.O"].Value
-                    local isGrabbed = character:FindFirstChild("GRABBING_CONSTRAINT") ~= nil
-
-                    -- Only modify the hitbox if not KO'd or grabbed
-                    if isKOd or isGrabbed then
-                        if humanoidRootPart.Size ~= Vector3.new(0, 0, 0) then
-                            humanoidRootPart.Size = Vector3.new(0, 0, 0)
-                            humanoidRootPart.Transparency = 1
-                            local outline = humanoidRootPart:FindFirstChild("Outline")
-                            if outline then releaseOutline(outline) end
-                        end
-                    else
-                        -- Update size, color, transparency, and outline dynamically
-                        if humanoidRootPart.Size ~= _G.HITBOX_SIZE then
-                            humanoidRootPart.Size = _G.HITBOX_SIZE
-                            humanoidRootPart.Transparency = _G.HitboxTransparency
-                            humanoidRootPart.BrickColor = BrickColor.new(_G.HitboxColor)
-                            humanoidRootPart.Material = EnumMaterial
-                            humanoidRootPart.CanCollide = false
-                            getOutline(humanoidRootPart)
-                        else
-                            -- Dynamically update color and transparency based on the UI changes
-                            humanoidRootPart.BrickColor = BrickColor.new(_G.HitboxColor)
-                            humanoidRootPart.Transparency = _G.HitboxTransparency
-                        end
-                        
-                        -- Update outline color and transparency dynamically based on the selected Outline settings
-                        local outline = humanoidRootPart:FindFirstChild("Outline")
-                        if outline then
-                            outline.Color3 = _G.OutlineColor
-                            outline.Transparency = _G.OutlineTransparency
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-
--- Use Heartbeat for smoother updates
-RunService.Heartbeat:Connect(function()
-    if not _G.Disabled then
-        updateHitboxes()
-    else
-        -- Reset the hitboxes if disabled
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= Players.LocalPlayer then
-                local character = player.Character
-                if character then
-                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                    if humanoidRootPart then
-                        humanoidRootPart.Size = Vector3.new(2, 2, 1)
-                        humanoidRootPart.Transparency = 1
-                        local outline = humanoidRootPart:FindFirstChild("Outline")
-                        if outline then releaseOutline(outline) end
-                    end
-                end
-            end
-        end
-    end
-end)
-
-LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('Cham Esp')
-
--- The actual cham effect
-Players = game:GetService("Players")
-RunService = game:GetService("RunService")
-LocalPlayer = Players.LocalPlayer
-highlightColor = Color3.fromRGB(255, 255, 255)  -- Default color for chams
-
--- Function to create a cham (highlight) effect for a player
-function CreateCham(player)
-    local character = player.Character or player.CharacterAdded:Wait()
-    if not character:FindFirstChild("HumanoidRootPart") then return end
-
-    -- Create the highlight object for the player's character
-    local highlight = Instance.new("Highlight")
-    highlight.Name = "ChamHighlight"
-    highlight.Parent = character
-    highlight.Adornee = character  -- Set the highlight target to the entire character
-    highlight.FillColor = highlightColor  -- Set color to chosen value
-    highlight.FillTransparency = 0.5  -- Make the highlight semi-transparent
-    highlight.OutlineTransparency = 1  -- Fully transparent outline (no outline)
-
-    -- Clean up when the character is removed
-    character:WaitForChild("HumanoidRootPart").AncestryChanged:Connect(function()
-        highlight:Destroy()  -- Remove the highlight when the player leaves or the character is destroyed
-    end)
-end
-
--- UI Toggle for Chams
-LeftGroupBox:AddToggle('ChamsToggle', {
-    Text = 'Chams',
-    Default = false, -- Default value (true / false)
-    Tooltip = 'Toggles cham effect for players',
-
-    Callback = function(Value)
-        _G.chams = Value
-        -- Apply or remove the cham effect based on the toggle state
-        if _G.chams then
-            -- Apply cham effect for players when enabled
-            for _, player in pairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character then
-                    CreateCham(player)
-                end
-            end
-        else
-            -- Remove cham effect for players when disabled
-            for _, player in pairs(Players:GetPlayers()) do
-                local character = player.Character
-                if character then
-                    local highlight = character:FindFirstChild("ChamHighlight")
-                    if highlight then
-                        highlight:Destroy()
-                    end
-                end
-            end
-        end
-    end
-})
-
--- Add color picker UI for Chams
-LeftGroupBox:AddLabel('Color'):AddColorPicker('ColorPicker', {
-    Default = Color3.fromRGB(255, 255, 255), -- White color (default)
-    Title = 'Cham Color', -- Title of the color picker
-    Transparency = 0, -- Disables transparency changing for this color picker
-
-    Callback = function(Value)
-        highlightColor = Value  -- Update the highlight color when the user picks a color
-        -- Update the cham color for existing players
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                local highlight = player.Character:FindFirstChild("ChamHighlight")
-                if highlight then
-                    highlight.FillColor = highlightColor  -- Apply the new color to the existing highlight
-                end
-            end
-        end
-    end
-})
-
--- Handle player join to ensure chams are applied
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function(character)
-        -- Wait until the character's root part is available before applying chams
-        local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-        if _G.chams and player ~= LocalPlayer then
-            CreateCham(player)  -- Apply cham if enabled and not the local player
-        end
-    end)
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-    -- Remove cham when player leaves
-    if player.Character then
-        local highlight = player.Character:FindFirstChild("ChamHighlight")
-        if highlight then
-            highlight:Destroy()
-        end
-    end
-end)
-
--- Periodically update chams for players when enabled using RunService.Heartbeat
-RunService.Heartbeat:Connect(function()
-    if _G.chams then
-        -- Loop through all players and ensure chams are applied
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                -- Create cham if it doesn't exist for the player
-                local character = player.Character
-                if not character:FindFirstChild("ChamHighlight") then
-                    CreateCham(player)
-                end
-            end
-        end
-    else
-        -- Disable the cham effect if _G.chams is false
-        for _, player in pairs(Players:GetPlayers()) do
-            local character = player.Character
-            if character then
-                local highlight = character:FindFirstChild("ChamHighlight")
-                if highlight then
-                    highlight:Destroy()
-                end
-            end
-        end
-    end
-end)
-
--- Ensure chams are applied to players who have respawned
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function(character)
-        -- In case a player respawns
-        if _G.chams and player ~= LocalPlayer then
-            local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-            CreateCham(player)
-        end
-    end)
-end)
-
--- Execute the toggle when the script is first run
-if _G.chams then
-    -- Enable the cham effect for players (not including local player)
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            CreateCham(player)
-        end
-    end
-else
-    -- Disable the cham effect for all players
-    for _, player in pairs(Players:GetPlayers()) do
-        local character = player.Character
-        if character then
-            local highlight = character:FindFirstChild("ChamHighlight")
-            if highlight then
-                highlight:Destroy()
-            end
-        end
-    end
-end
-
-LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('Name Esp')
-
-Players = game:GetService("Players")
-RunService = game:GetService("RunService")
-Debris = game:GetService("Debris")  -- For cleanup
-LocalPlayer = Players.LocalPlayer
-
-displayOption = 'Username'  -- Default display option
-nameTagESPEnabled = false  -- Default for the name tag ESP toggle
-
--- Function to create a name tag for a player
-function CreateNameTag(player)
-    -- Skip the local player
-    if player == LocalPlayer then return end
-
-    local character = player.Character or player.CharacterAdded:Wait()
-    local head = character:WaitForChild("Head")
-
-    -- Create BillboardGui and TextLabel for the name tag
-    local billboardGui = Instance.new("BillboardGui")
-    billboardGui.Parent = character
-    billboardGui.Size = UDim2.new(0, 100, 0, 30)  -- Adjust the size for the name tag
-    billboardGui.AlwaysOnTop = true
-    billboardGui.Adornee = head
-    billboardGui.StudsOffset = Vector3.new(0, 6, 0)  -- Adjust position
-
-    local nameTag = Instance.new("TextLabel")
-    nameTag.Parent = billboardGui
-    nameTag.Size = UDim2.new(1, 0, 1, 0)  -- Full size of the BillboardGui
-    nameTag.BackgroundTransparency = 1
-    nameTag.TextColor3 = Color3.new(1, 1, 1)  -- White text color
-    nameTag.TextStrokeTransparency = 0.6  -- Adjust outline visibility
-    nameTag.TextStrokeColor3 = Color3.new(0, 0, 0)  -- Black stroke for visibility
-    nameTag.TextSize = 10  -- Smaller base text size
-
-    -- Set the name text based on the selected option
-    if displayOption == "Username" then
-        nameTag.Text = player.Name  -- Display the player's username
-    else
-        nameTag.Text = player.DisplayName  -- Display the player's display name
-    end
-
-    -- Cleanup when the player leaves
-    Debris:AddItem(billboardGui, 5)  -- Automatically cleanup after 5 seconds
-end
-
--- Function to remove name tags
-function RemoveNameTags()
-    for _, player in pairs(Players:GetPlayers()) do
-        if player.Character then
-            local character = player.Character
-            local billboardGui = character:FindFirstChildOfClass("BillboardGui")
-            if billboardGui then
-                -- Cleanup with Debris service
-                Debris:AddItem(billboardGui, 0)
-            end
-        end
-    end
-end
-
--- Add the toggle to enable or disable the Name Tag ESP
-LeftGroupBox:AddToggle('MyToggle', {
-    Text = 'Enable Name Tag ESP',
-    Default = false,  -- Default value (true / false)
-    Tooltip = 'Toggles the name tag ESP visibility.',
-    Callback = function(Value)
-        nameTagESPEnabled = Value
-        if nameTagESPEnabled then
-            -- Update name tags immediately if ESP is enabled
-            for _, player in pairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character then
-                    CreateNameTag(player)
-                end
-            end
-        else
-            -- If ESP is disabled, remove all name tags
-            RemoveNameTags()
-        end
-    end
-})
-
--- Add the dropdown for selecting between Username or DisplayName
-LeftGroupBox:AddDropdown('NameDisplayOption', {
-    Values = { 'DisplayName', 'Username' },
-    Default = 1,  -- Default to "Username"
-    Multi = false, -- Single selection only
-    Text = 'Name Display Option',
-    Tooltip = 'Choose whether to display the player\'s Username or DisplayName',
-    Callback = function(Value)
-        displayOption = Value  -- Update the display option based on dropdown selection
-        if nameTagESPEnabled then
-            -- Reapply name tags immediately when the dropdown value changes
-            RemoveNameTags()  -- Remove existing name tags
-            for _, player in pairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character then
-                    CreateNameTag(player)
-                end
-            end
-        end
-    end
-})
-
--- Periodically update name tags every heartbeat (for new players)
-RunService.Heartbeat:Connect(function()
-    if nameTagESPEnabled then
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character and not player.Character:FindFirstChildOfClass("BillboardGui") then
-                CreateNameTag(player)
-            end
-        end
-    end
-end)
-
-LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('Cash Esp')
-
-cashESPEnabled = false
-textSize = 20
-
--- Caching frequently used Enum values
-Workspace = game:GetService("Workspace")
-Ignored = Workspace:WaitForChild("Ignored")
-Drop = Ignored:WaitForChild("Drop")
-Debris = game:GetService("Debris")
-RunService = game:GetService("RunService")
-
--- Function to create or update BillboardGui for MoneyDrop
-function cham(object)
-    if object.Name == "MoneyDrop" then
-        local bill = object:FindFirstChild("BillboardGui")
-        
-        if bill then
-            if cashESPEnabled then
-                bill.AlwaysOnTop = true
-                bill.Size = UDim2.new(textSize, 0, textSize / 2, 0)
-                bill.Enabled = true
-            else
-                bill.Enabled = false
-            end
-        end
-    end
-end
-
--- Apply Cash ESP toggle
-LeftGroupBox:AddToggle('MyToggle', {
-    Text = 'Cash Esp',
-    Default = false, 
-    Tooltip = 'Shows cash through walls', 
-    Callback = function(Value)
-        cashESPEnabled = Value
-    end
-})
-
--- Apply Text Size slider functionality
-LeftGroupBox:AddSlider('MySlider', {
-    Text = 'Text size slider',
-    Default = 20,
-    Min = 5,
-    Max = 100,
-    Rounding = 1,
-    Compact = false,
-    Callback = function(Value)
-        textSize = Value
-    end
-})
-
--- Function to check and update ESP for all Money Drops
-function updateCashESP()
-    for _, v in pairs(Drop:GetChildren()) do
-        cham(v)
-    end
-end
-
--- Initial check for existing Money Drops on script load
-updateCashESP()
-
--- Connect ChildAdded event to efficiently handle new Money Drops
-Drop.ChildAdded:Connect(function(child)
-    -- Debris cleanup for objects not needed anymore
-    Debris:AddItem(child, 60)  -- Set a lifetime for ESP objects if necessary
-    cham(child)
-end)
-
--- Use RunService.Heartbeat to periodically check and update ESP for existing Money Drops
-RunService.Heartbeat:Connect(function()
-    if cashESPEnabled then
-        updateCashESP()  -- Continually apply the Cash ESP effect
-    end
-end)
-
-LeftGroupBox = Tabs.Main:AddLeftGroupbox('Silent Aim HvH')
+LeftGroupBox = Tabs.Main:AddLeftGroupbox('Shoot Gun')
 
 getgenv().TracerEnabled = true
 getgenv().AutoShootEnabled = true
@@ -1289,7 +749,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 LeftGroupBox:AddToggle('ScriptToggle', {
-    Text = 'Toggle Silent Aim',
+    Text = 'Toggle Shoot Gun',
     Default = false,
 
     Callback = function(Value)
@@ -1306,7 +766,7 @@ LeftGroupBox:AddLabel('Keybind'):AddKeyPicker('KeyPicker', {
     Default = 'T',
     SyncToggleState = false,
     Mode = 'Toggle',
-    Text = 'Silent Aim Keybind',
+    Text = 'Shoot Gun Keybind',
     NoUI = false,
 
     Callback = function(Value)
@@ -1317,12 +777,12 @@ LeftGroupBox:AddLabel('Keybind'):AddKeyPicker('KeyPicker', {
     end
 })
 
-RightGroupBox = Tabs.Main:AddRightGroupbox('Kill Aura')
+LeftGroupBox = Tabs.Main:AddLeftGroupbox('Kill Aura')
 
-RightGroupBox:AddToggle('MyToggle', {
-    Text = 'Toggle KillAura',
+LeftGroupBox:AddToggle('MyToggle', {
+    Text = 'Toggle Kill Aura',
     Default = false,
-    Tooltip = 'Enables The KillAura Feature',
+    Tooltip = 'Enables The Kill Aura Feature',
     Callback = function(Value)
         if Value then
         player = game:GetService("Players").LocalPlayer
@@ -1405,7 +865,149 @@ RightGroupBox:AddToggle('MyToggle', {
     end
 })
 
-local ESPSection = Tabs.Visuals:AddLeftGroupbox('ESP Settings')
+local LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('ESP')
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Camera = game:GetService("Workspace").CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+local ESP = {}
+ESP.Boxes = {}
+local scaleFactor = 1 -- Default scale factor for box sizes
+local espEnabled = false -- Toggle state for ESP
+local espColor = Color3.fromRGB(255, 255, 255) -- Default ESP box color (White)
+
+-- Function to add ESP box
+function ESP:AddBox(player)
+    if player == LocalPlayer then return end
+    
+    local box = Drawing.new("Square")
+    box.Thickness = 1
+    box.Color = espColor -- Set default color
+    box.Filled = false
+    box.Transparency = 1
+    box.Visible = false
+    
+    ESP.Boxes[player] = box
+end
+
+-- Remove ESP box when player leaves or dies
+Players.PlayerRemoving:Connect(function(player)
+    if ESP.Boxes[player] then
+        ESP.Boxes[player]:Remove()
+        ESP.Boxes[player] = nil
+    end
+end)
+
+-- Listen for character respawn (death/reset) and cleanup old boxes
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        -- Remove the old box if it exists
+        if ESP.Boxes[player] then
+            ESP.Boxes[player]:Remove()
+        end
+
+        -- Add a new box for the new character
+        ESP:AddBox(player)
+    end)
+end)
+
+-- Toggle to activate/deactivate ESP
+LeftGroupBox:AddToggle('ESPEnabled', {
+    Text = 'Boxes ESP',
+    Default = false, -- Default value is false (disabled)
+    Tooltip = 'Enable or disable the ESP boxes',
+    
+    Callback = function(Value)
+        espEnabled = Value
+        if not espEnabled then
+            -- Hide all ESP boxes when disabled
+            for _, box in pairs(ESP.Boxes) do
+                box.Visible = false
+            end
+        end
+    end
+})
+
+-- Slider to adjust box size
+LeftGroupBox:AddSlider('BoxSize', {
+    Text = 'Box Size',
+    Default = 1,
+    Min = 0.5,
+    Max = 3,
+    Rounding = 1,
+    Compact = false,
+
+    Callback = function(Value)
+        scaleFactor = Value
+    end
+})
+
+-- Color picker for ESP box color
+LeftGroupBox:AddLabel('Box Color'):AddColorPicker('ColorPicker', {
+    Default = Color3.new(1, 1, 1), -- Default White
+    Title = 'Box Color',
+    Transparency = 0,
+    
+    Callback = function(Value)
+        espColor = Value
+        -- Apply color change to all existing ESP boxes
+        for _, box in pairs(ESP.Boxes) do
+            box.Color = espColor
+        end
+    end
+})
+
+-- Main loop for rendering ESP boxes
+RunService.RenderStepped:Connect(function()
+    if not espEnabled then return end -- If ESP is disabled, skip the loop
+    
+    local cameraPosition = Camera.CFrame.Position
+    for _, player in pairs(Players:GetPlayers()) do
+        local character = player.Character
+        local box = ESP.Boxes[player]
+
+        if character and box then
+            local head = character:FindFirstChild("Head")
+            local rootPart = character:FindFirstChild("HumanoidRootPart")
+            local humanoid = character:FindFirstChild("Humanoid")
+            local foot = character:FindFirstChild("LeftFoot") or character:FindFirstChild("RightFoot") or character:FindFirstChild("HumanoidRootPart") -- Use foot for accurate bottom
+            
+            if rootPart and head and foot and humanoid and humanoid.Health > 0 then
+                local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                local footPos, footOnScreen = Camera:WorldToViewportPoint(foot.Position - Vector3.new(0, 1, 0))
+                
+                if headOnScreen and footOnScreen then
+                    local height = math.abs(headPos.Y - footPos.Y)
+                    local distance = (cameraPosition - rootPart.Position).Magnitude
+                    local scale = math.clamp(1 / (distance / 10), 0.6, 1.5) -- Prevents extreme scaling
+                    
+                    local width = height / 2 -- Adjusted width for better proportion
+                    
+                    -- Apply both the default scale and the slider-controlled scale
+                    box.Size = Vector2.new(width * scale * scaleFactor, height * scale * scaleFactor)
+                    box.Position = Vector2.new(headPos.X - (width * scale * scaleFactor) / 2, headPos.Y)
+                    box.Color = espColor -- Ensure color stays updated
+                    box.Visible = true
+                else
+                    box.Visible = false
+                end
+            else
+                box.Visible = false
+            end
+        elseif not box and player ~= LocalPlayer then
+            ESP:AddBox(player)
+        end
+    end
+end)
+
+-- Add boxes for existing players
+for _, player in pairs(Players:GetPlayers()) do
+    ESP:AddBox(player)
+end
+
+local ESPSection = Tabs.Visuals:AddLeftGroupbox('Corner Box ESP')
 
 local ESPEnabled = false
 local ESPConnections = {}
@@ -1596,7 +1198,277 @@ Players.PlayerAdded:Connect(function(newplr)
     coroutine.wrap(Main)(newplr)
 end)
 
-local LeftGroupBox = Tabs.Misc:AddLeftGroupbox('anti-void')
+local LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('Name ESP')
+
+Players = game:GetService("Players")
+RunService = game:GetService("RunService")
+Debris = game:GetService("Debris")  -- For cleanup
+LocalPlayer = Players.LocalPlayer
+
+displayOption = 'Username'  -- Default display option
+nameTagESPEnabled = false  -- Default for the name tag ESP toggle
+
+-- Function to create a name tag for a player
+function CreateNameTag(player)
+    -- Skip the local player
+    if player == LocalPlayer then return end
+
+    local character = player.Character or player.CharacterAdded:Wait()
+    local head = character:WaitForChild("Head")
+
+    -- Create BillboardGui and TextLabel for the name tag
+    local billboardGui = Instance.new("BillboardGui")
+    billboardGui.Parent = character
+    billboardGui.Size = UDim2.new(0, 100, 0, 30)  -- Adjust the size for the name tag
+    billboardGui.AlwaysOnTop = true
+    billboardGui.Adornee = head
+    billboardGui.StudsOffset = Vector3.new(0, 6, 0)  -- Adjust position
+
+    local nameTag = Instance.new("TextLabel")
+    nameTag.Parent = billboardGui
+    nameTag.Size = UDim2.new(1, 0, 1, 0)  -- Full size of the BillboardGui
+    nameTag.BackgroundTransparency = 1
+    nameTag.TextColor3 = Color3.new(1, 1, 1)  -- White text color
+    nameTag.TextStrokeTransparency = 0.6  -- Adjust outline visibility
+    nameTag.TextStrokeColor3 = Color3.new(0, 0, 0)  -- Black stroke for visibility
+    nameTag.TextSize = 10  -- Smaller base text size
+
+    -- Set the name text based on the selected option
+    if displayOption == "Username" then
+        nameTag.Text = player.Name  -- Display the player's username
+    else
+        nameTag.Text = player.DisplayName  -- Display the player's display name
+    end
+
+    -- Cleanup when the player leaves
+    Debris:AddItem(billboardGui, 5)  -- Automatically cleanup after 5 seconds
+end
+
+-- Function to remove name tags
+function RemoveNameTags()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character then
+            local character = player.Character
+            local billboardGui = character:FindFirstChildOfClass("BillboardGui")
+            if billboardGui then
+                -- Cleanup with Debris service
+                Debris:AddItem(billboardGui, 0)
+            end
+        end
+    end
+end
+
+-- Add the toggle to enable or disable the Name Tag ESP
+LeftGroupBox:AddToggle('MyToggle', {
+    Text = 'Name ESP',
+    Default = false,  -- Default value (true / false)
+    Tooltip = 'Toggles the name tag ESP visibility.',
+    Callback = function(Value)
+        nameTagESPEnabled = Value
+        if nameTagESPEnabled then
+            -- Update name tags immediately if ESP is enabled
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    CreateNameTag(player)
+                end
+            end
+        else
+            -- If ESP is disabled, remove all name tags
+            RemoveNameTags()
+        end
+    end
+})
+
+-- Add the dropdown for selecting between Username or DisplayName
+LeftGroupBox:AddDropdown('NameDisplayOption', {
+    Values = { 'DisplayName', 'Username' },
+    Default = 1,  -- Default to "Username"
+    Multi = false, -- Single selection only
+    Text = 'Name Display Option',
+    Tooltip = 'Choose whether to display the player\'s Username or DisplayName',
+    Callback = function(Value)
+        displayOption = Value  -- Update the display option based on dropdown selection
+        if nameTagESPEnabled then
+            -- Reapply name tags immediately when the dropdown value changes
+            RemoveNameTags()  -- Remove existing name tags
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    CreateNameTag(player)
+                end
+            end
+        end
+    end
+})
+
+-- Periodically update name tags every heartbeat (for new players)
+RunService.Heartbeat:Connect(function()
+    if nameTagESPEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and not player.Character:FindFirstChildOfClass("BillboardGui") then
+                CreateNameTag(player)
+            end
+        end
+    end
+end)
+
+local LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('Cham ESP')
+
+Players = game:GetService("Players")
+RunService = game:GetService("RunService")
+LocalPlayer = Players.LocalPlayer
+highlightColor = Color3.fromRGB(255, 255, 255)  -- Default color for chams
+
+-- Function to create a cham (highlight) effect for a player
+function CreateCham(player)
+    local character = player.Character or player.CharacterAdded:Wait()
+    if not character:FindFirstChild("HumanoidRootPart") then return end
+
+    -- Create the highlight object for the player's character
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ChamHighlight"
+    highlight.Parent = character
+    highlight.Adornee = character  -- Set the highlight target to the entire character
+    highlight.FillColor = highlightColor  -- Set color to chosen value
+    highlight.FillTransparency = 0.5  -- Make the highlight semi-transparent
+    highlight.OutlineTransparency = 1  -- Fully transparent outline (no outline)
+
+    -- Clean up when the character is removed
+    character:WaitForChild("HumanoidRootPart").AncestryChanged:Connect(function()
+        highlight:Destroy()  -- Remove the highlight when the player leaves or the character is destroyed
+    end)
+end
+
+LeftGroupBox:AddToggle('ChamsToggle', {
+    Text = 'Chams',
+    Default = false, -- Default value (true / false)
+    Tooltip = 'Toggles cham effect for players',
+
+    Callback = function(Value)
+        _G.chams = Value
+        -- Apply or remove the cham effect based on the toggle state
+        if _G.chams then
+            -- Apply cham effect for players when enabled
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    CreateCham(player)
+                end
+            end
+        else
+            -- Remove cham effect for players when disabled
+            for _, player in pairs(Players:GetPlayers()) do
+                local character = player.Character
+                if character then
+                    local highlight = character:FindFirstChild("ChamHighlight")
+                    if highlight then
+                        highlight:Destroy()
+                    end
+                end
+            end
+        end
+    end
+})
+
+-- Add color picker UI for Chams
+LeftGroupBox:AddLabel('Cham Color'):AddColorPicker('ColorPicker', {
+    Default = Color3.fromRGB(255, 255, 255), -- White color (default)
+    Title = 'Cham Color', -- Title of the color picker
+    Transparency = 0, -- Disables transparency changing for this color picker
+
+    Callback = function(Value)
+        highlightColor = Value  -- Update the highlight color when the user picks a color
+        -- Update the cham color for existing players
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local highlight = player.Character:FindFirstChild("ChamHighlight")
+                if highlight then
+                    highlight.FillColor = highlightColor  -- Apply the new color to the existing highlight
+                end
+            end
+        end
+    end
+})
+
+-- Handle player join to ensure chams are applied
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        -- Wait until the character's root part is available before applying chams
+        local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+        if _G.chams and player ~= LocalPlayer then
+            CreateCham(player)  -- Apply cham if enabled and not the local player
+        end
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    -- Remove cham when player leaves
+    if player.Character then
+        local highlight = player.Character:FindFirstChild("ChamHighlight")
+        if highlight then
+            highlight:Destroy()
+        end
+    end
+end)
+
+-- Periodically update chams for players when enabled using RunService.Heartbeat
+RunService.Heartbeat:Connect(function()
+    if _G.chams then
+        -- Loop through all players and ensure chams are applied
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                -- Create cham if it doesn't exist for the player
+                local character = player.Character
+                if not character:FindFirstChild("ChamHighlight") then
+                    CreateCham(player)
+                end
+            end
+        end
+    else
+        -- Disable the cham effect if _G.chams is false
+        for _, player in pairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local highlight = character:FindFirstChild("ChamHighlight")
+                if highlight then
+                    highlight:Destroy()
+                end
+            end
+        end
+    end
+end)
+
+-- Ensure chams are applied to players who have respawned
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        -- In case a player respawns
+        if _G.chams and player ~= LocalPlayer then
+            local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+            CreateCham(player)
+        end
+    end)
+end)
+
+-- Execute the toggle when the script is first run
+if _G.chams then
+    -- Enable the cham effect for players (not including local player)
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            CreateCham(player)
+        end
+    end
+else
+    -- Disable the cham effect for all players
+    for _, player in pairs(Players:GetPlayers()) do
+        local character = player.Character
+        if character then
+            local highlight = character:FindFirstChild("ChamHighlight")
+            if highlight then
+                highlight:Destroy()
+            end
+        end
+    end
+end
+
+local RightGroupBox = Tabs.Misc:AddRightGroupbox('Character')
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -1605,11 +1477,10 @@ local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local rootPart = character:WaitForChild("HumanoidRootPart")
 
-local teleportHeight = 500
 local antiVoidEnabled = false
 
-LeftGroupBox:AddToggle('AntiVoidToggle', {
-    Text = 'Enable Anti-Void',
+RightGroupBox:AddToggle('AntiVoidToggle', {
+    Text = 'anti-void',
     Default = false,
     Tooltip = 'Prevents falling into the void by teleporting up',
 
@@ -1619,374 +1490,538 @@ LeftGroupBox:AddToggle('AntiVoidToggle', {
     end
 })
 
-LeftGroupBox:AddSlider('TeleportHeightSlider', {
-    Text = 'Studs it teleports up', 
-    Default = 500,
-    Min = 100,
-    Max = 1000,
-    Rounding = 1,
-    Compact = false,
-
-    Callback = function(Value)
-        teleportHeight = Value
-        print('[cb] Teleport height changed to:', Value)
-    end
-})
-
 local function antiVoidCheck()
     if antiVoidEnabled and rootPart and rootPart.Position.Y <= -150 then
-        rootPart.CFrame = rootPart.CFrame + Vector3.new(0, teleportHeight, 0)
+        rootPart.CFrame = rootPart.CFrame + Vector3.new(0, 500, 0)
     end
 end
 
-local connection
-connection = RunService.Heartbeat:Connect(antiVoidCheck)
+RunService.Heartbeat:Connect(antiVoidCheck)
 
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     rootPart = character:WaitForChild("HumanoidRootPart")
 end)
 
- LeftGroupBox = Tabs.Visuals:AddLeftGroupbox('No Fog')
+    local CollectionService = game:GetService("CollectionService")
 
-    local lighting = game:GetService("Lighting")
-    local StarterGui = game:GetService("StarterGui")
-    local debris = game:GetService("Debris")
+    -- Table to cache seats
+    local cachedSeats = {}
 
-    -- Store common values in variables to minimize repetitive calls
-    local fogEnd = lighting.FogEnd
-    local fogStart = lighting.FogStart
-
-    -- Create the toggle button (integrated from your provided example)
-    LeftGroupBox:AddToggle('MyToggle', {
-    Text = 'No Fog',
-    Default = false, -- Default value (true / false)
-    Tooltip = 'This removes any kind of Fog from the game', -- Information shown when you hover over the toggle
-
-    Callback = function(Value)
-        if Value then
-            -- Check if the fog removal has been executed before
-            if not _G.FogRemovalExecuted then
-                -- Store original fog settings
-                _G.OriginalFogSettings = {
-                    FogEnd = fogEnd,
-                    FogStart = fogStart,
-                }
-
-                lighting.FogEnd = 100000  -- Set this to a high value to push fog far away
-                lighting.FogStart = 0     -- Set this to 0 to ensure fog doesn't start close
-
-                local atmosphere = lighting:FindFirstChildOfClass("Atmosphere")
-                if atmosphere then
-                    atmosphere:Destroy()
-                end
-
-                _G.FogRemovalExecuted = true
-            end
+    -- Function to process a seat
+    local function processSeat(seat, state)
+    if seat:IsA("Seat") and not cachedSeats[seat] then
+        cachedSeats[seat] = seat -- Cache the seat
+    end
+    if cachedSeats[seat] then
+        seat.Disabled = state -- Update the state
+        if state then
+            CollectionService:AddTag(seat, "Seat")
         else
-            if _G.FogRemovalExecuted then
-                lighting.FogEnd = _G.OriginalFogSettings.FogEnd
-                lighting.FogStart = _G.OriginalFogSettings.FogStart
+            CollectionService:RemoveTag(seat, "Seat")
+        end
+    end
+    end
 
-                _G.FogRemovalExecuted = false
+    -- Initialize cached seats
+    local function initializeSeats()
+    for _, object in ipairs(workspace:GetDescendants()) do
+        if object:IsA("Seat") then
+            cachedSeats[object] = object
+        end
+    end
+    end
+
+    -- Monitor new seats dynamically
+    local function monitorNewSeats()
+    workspace.DescendantAdded:Connect(function(descendant)
+        if descendant:IsA("Seat") then
+            processSeat(descendant, CollectionService:HasTag(descendant, "Seat"))
+        end
+    end)
+    end
+
+    -- Integration with the toggle
+    RightGroupBox:AddToggle('MyToggle', {
+    Text = 'no-seats',
+    Default = false, -- Default value
+    Tooltip = 'Makes it so you cant sit down on anything', -- Tooltip info
+
+    Callback = function(value)
+        print('[cb] MyToggle changed to:', value)
+        for seat, _ in pairs(cachedSeats) do
+            if seat and seat:IsA("Seat") then
+                seat.Disabled = value -- Update seat state
+                if value then
+                    CollectionService:AddTag(seat, "Seat")
+                else
+                    CollectionService:RemoveTag(seat, "Seat")
+                end
             end
         end
-
-        print('[cb] MyToggle changed to:', Value)
     end
     })
 
-    LeftGroupBox = Tabs.Visuals:AddRightGroupbox('Fullbright')
+    -- Initialize and start monitoring
+    initializeSeats()
+    monitorNewSeats()
 
-    LeftGroupBox:AddToggle('MyToggle', {
-        Text = 'Fullbright',
+    RightGroupBox:AddToggle('MyToggle', {
+        Text = 'cash-dropper',
         Default = false, -- Default value (true / false)
-        Tooltip = 'Removes shadows and increases brightness', -- Information shown when you hover over the toggle
+        Tooltip = 'Automatically drops cash', -- Information shown when you hover over the toggle
     
         Callback = function(Value)
-            if not _G.FullBrightExecuted then
-                _G.FullBrightEnabled = false
-    
-                local Lighting = game:GetService("Lighting")
-                
-                -- Store default settings in a table
-                _G.NormalLightingSettings = {
-                    Brightness = Lighting.Brightness,
-                    ClockTime = Lighting.ClockTime,
-                    GlobalShadows = Lighting.GlobalShadows,
-                    Ambient = Lighting.Ambient
-                }
-    
-                -- Full Bright settings
-                local FullBrightSettings = {
-                    Brightness = 1,
-                    ClockTime = 12,
-                    GlobalShadows = false,
-                    Ambient = Color3.fromRGB(178, 178, 178)
-                }
-    
-                -- Set lighting properties
-                local function setLightingProperties(properties)
-                    for property, value in pairs(properties) do
-                        Lighting[property] = value
-                    end
-                end
-    
-                -- Initial setup
-                setLightingProperties(FullBrightSettings)
-    
-                -- Create a single function to handle property changes
-                local function createPropertyChangeListener(property, defaultValue, newValue)
-                    Lighting:GetPropertyChangedSignal(property):Connect(function()
-                        if Lighting[property] ~= defaultValue and Lighting[property] ~= _G.NormalLightingSettings[property] then
-                            _G.NormalLightingSettings[property] = Lighting[property]
-                            if not _G.FullBrightEnabled then
-                                repeat wait() until _G.FullBrightEnabled
-                            end
-                            Lighting[property] = newValue
-                        end
-                    end)
-                end
-    
-                -- Set up property listeners
-                for property, newValue in pairs(FullBrightSettings) do
-                    createPropertyChangeListener(property, newValue, newValue)
-                end
-    
-                -- Periodically toggle FullBright settings
-                local LatestValue = true
-                spawn(function()
-                    while wait() do
-                        if _G.FullBrightEnabled ~= LatestValue then
-                            if not _G.FullBrightEnabled then
-                                setLightingProperties(_G.NormalLightingSettings)
-                            else
-                                setLightingProperties(FullBrightSettings)
-                            end
-                            LatestValue = not LatestValue
-                        end
-                    end
-                end)
-            end
-    
-            -- Toggle full bright state
-            _G.FullBrightExecuted = true
-            _G.FullBrightEnabled = Value -- directly using Value here to toggle the state
-        end
-    })    
+            -- Locals
+local Player = game:GetService("Players").LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local MainScreenGui = Player.PlayerGui.MainScreenGui
+local MoneyText = MainScreenGui.MoneyText
 
-LeftGroupBox = Tabs.Visuals:AddRightGroupbox('Ambience')
+-- Global variable to track Money Drop state
+getgenv().moneyDropEnabled = getgenv().moneyDropEnabled or false -- Initialize as false if not already set
 
-local lighting = game:GetService("Lighting")
-local StarterGui = game:GetService("StarterGui")
-local runService = game:GetService("RunService")
-local debris = game:GetService("Debris")
-
-if not _G.OriginalLightingSettings then
-    _G.OriginalLightingSettings = {
-        Ambient = lighting.Ambient,
-        OutdoorAmbient = lighting.OutdoorAmbient,
-        Brightness = lighting.Brightness,
-        ColorShift_Bottom = lighting.ColorShift_Bottom,
-        ColorShift_Top = lighting.ColorShift_Top,
-        FogColor = lighting.FogColor,
-        FogStart = lighting.FogStart,
-        FogEnd = lighting.FogEnd,
-        TimeOfDay = lighting.TimeOfDay,
-        Skybox = lighting:FindFirstChildOfClass("Sky"), -- Ensure no errors if skybox doesn't exist
-        ClockTime = lighting.ClockTime
-    }
+-- Function to safely extract the money amount from the text
+local function getMoneyAmount()
+    local moneyText = MoneyText.Text:match("%$(%d[%,%d]*)")  -- Extract the money amount after "$"
+    if moneyText then
+        local cleanedMoneyString = moneyText:gsub(",", "")  -- Remove commas
+        local amount = tonumber(cleanedMoneyString)  -- Convert to number
+        return amount or 0  -- If the conversion fails, return 0
+    else
+        return 0
+    end
 end
 
-local selectedAmbientColor = _G.OriginalLightingSettings.Ambient
-local selectedOutdoorAmbientColor = _G.OriginalLightingSettings.OutdoorAmbient
-local selectedColorShiftBottom = _G.OriginalLightingSettings.ColorShift_Bottom
-local selectedColorShiftTop = _G.OriginalLightingSettings.ColorShift_Top
-local selectedFogColor = _G.OriginalLightingSettings.FogColor
-
-local skyboxAssetID = "rbxassetid://1294489738"
-
--- Add the toggle for the royal purple ambience
-LeftGroupBox:AddToggle('AmbienceToggle', {
-    Text = 'Enable Custom Ambient Lighting',
-    Default = false, -- Default value (true / false)
-    Tooltip = 'Toggle to switch between original and custom ambient lighting',
-
-    Callback = function(Value)
-        if Value then
-            -- Apply the altered custom ambient lighting settings
-            lighting.Ambient = selectedAmbientColor
-            lighting.OutdoorAmbient = selectedOutdoorAmbientColor
-            lighting.Brightness = 2
-            lighting.ColorShift_Bottom = selectedColorShiftBottom
-            lighting.ColorShift_Top = selectedColorShiftTop
-            lighting.FogColor = selectedFogColor
-            lighting.FogStart = 0
-            lighting.FogEnd = 500
-            lighting.TimeOfDay = "18:00:00"
-
-            -- Set a custom skybox for the custom ambience
-            local skybox = lighting:FindFirstChildOfClass("Sky")
-            if not skybox then
-                skybox = Instance.new("Sky")
-                skybox.Parent = lighting
-            end
-            skybox.SkyboxBk = skyboxAssetID
-            skybox.SkyboxDn = skyboxAssetID
-            skybox.SkyboxFt = skyboxAssetID
-            skybox.SkyboxLf = skyboxAssetID
-            skybox.SkyboxRt = skyboxAssetID
-            skybox.SkyboxUp = skyboxAssetID
-
-            -- Set the flag to indicate that the lighting has been altered
-            _G.AmbienceToggled = true
-
-            -- Immediately set the time of day to the current slider value when toggle is enabled
-            lighting.ClockTime = _G.ClockTimeOverride or 17 -- Default to the slider value if set
-        else
-            -- Reset the lighting back to the original settings
-            lighting.Ambient = _G.OriginalLightingSettings.Ambient
-            lighting.OutdoorAmbient = _G.OriginalLightingSettings.OutdoorAmbient
-            lighting.Brightness = _G.OriginalLightingSettings.Brightness
-            lighting.ColorShift_Bottom = _G.OriginalLightingSettings.ColorShift_Bottom
-            lighting.ColorShift_Top = _G.OriginalLightingSettings.ColorShift_Top
-            lighting.FogColor = _G.OriginalLightingSettings.FogColor
-            lighting.FogStart = _G.OriginalLightingSettings.FogStart
-            lighting.FogEnd = _G.OriginalLightingSettings.FogEnd
-            lighting.TimeOfDay = _G.OriginalLightingSettings.TimeOfDay
-
-            local sky = lighting:FindFirstChildOfClass("Sky")
-            if sky then
-                debris:AddItem(sky, 1) -- Use debris to clean up skybox instance
-            end
-
-            if _G.OriginalLightingSettings.Skybox then
-                local originalSkybox = _G.OriginalLightingSettings.Skybox:Clone()
-                originalSkybox.Parent = lighting
-            end
-
-            _G.AmbienceToggled = false
-        end
+-- Function to drop money
+local function dropMoney(amountToDrop)
+    if amountToDrop > 0 then
+        ReplicatedStorage.MainEvent:FireServer("DropMoney", tostring(amountToDrop))  -- Convert amount to string
     end
-})
+end
 
-LeftGroupBox:AddSlider('BrightnessSlider', { 
-    Text = 'Brightness Control',
-    Default = 10,  -- Set initial brightness to 2 (adjust if needed)
-    Min = 0,
-    Max = 20,  -- Max brightness set to 20
-    Rounding = 1,
-    Compact = false,
+-- Function to enable or disable the money drop
+local function toggleMoneyDrop()
+    getgenv().moneyDropEnabled = not getgenv().moneyDropEnabled -- Toggle the state
+end
 
-    Callback = function(Value)
-        -- Immediately change the lighting brightness live based on slider value
-        lighting.Brightness = Value
-    end
-})
-
--- Add the slider to control fog end with max value set to 1000
-LeftGroupBox:AddSlider('FogEndSlider', { 
-    Text = 'Fog End Control',
-    Default = 500,  -- Set initial fog end to 500 (adjust if needed)
-    Min = 100,
-    Max = 10000,  -- Max fog end set to 100000
-    Rounding = 0,
-    Compact = false,
-
-    Callback = function(Value)
-        lighting.FogEnd = Value
-    end
-})
-
-LeftGroupBox:AddSlider('TimeOfDaySlider', { 
-    Text = 'Time of Day Control',
-    Default = 17,  -- Set initial time to 12:00 (adjust if needed)
-    Min = 0,
-    Max = 24,  -- 24-hour format for time of day
-    Rounding = 1,
-    Compact = false,
-
-    Callback = function(Value)
-        -- Lock the time of day client-side by setting it
-        if _G.AmbienceToggled then
-            lighting.ClockTime = Value
-            -- Save the desired value so it stays fixed
-            _G.ClockTimeOverride = Value
-        end
-    end
-})
-
-runService.Heartbeat:Connect(function()
-    if _G.AmbienceToggled and _G.ClockTimeOverride then
-        lighting.ClockTime = _G.ClockTimeOverride
+-- Main loop (this will stop doing anything when moneyDropEnabled is false)
+RunService.Heartbeat:Connect(function()
+    if getgenv().moneyDropEnabled then
+        local money = getMoneyAmount()  -- Get the current money amount
+        dropMoney(money < 15000 and money or 15000)  -- Drop all money if under 15,000, or drop 15,000
     end
 end)
 
-LeftGroupBox:AddLabel('Ambient Color Picker'):AddColorPicker('AmbientColorPicker', {
-    Default = Color3.fromRGB(120, 81, 169),  -- Default royal purple
-    Title = 'Select Ambient Color',
-    Transparency = 0,  -- Optional
+-- Call this function to toggle the money drop
+toggleMoneyDrop()  -- Toggle the money drop (enable or disable)
+        end
+    })
+
+_G.autoStomp = _G.autoStomp or false
+
+local stompRemote = game.ReplicatedStorage.MainEvent
+local player = game.Players.LocalPlayer
+local runService = game:GetService("RunService")
+
+local isLooping = false
+
+local function startStomping()
+    local stompConnection
+    stompConnection = runService.Heartbeat:Connect(function()
+        if isLooping then
+            if player.Character and player.Character:FindFirstChild("Humanoid") then
+                stompRemote:FireServer("Stomp")
+            end
+        end
+    end)
+    _G.stompConnection = stompConnection
+end
+
+local function stopStomping()
+    if _G.stompConnection then
+        _G.stompConnection:Disconnect()
+        _G.stompConnection = nil
+    end
+end
+
+RightGroupBox:AddToggle('AutoStompToggle', {
+    Text = 'auto-stomp',
+    Default = false,
+    Tooltip = 'Automatically stomps when near downed players',
 
     Callback = function(Value)
-        selectedAmbientColor = Value
-        if _G.AmbienceToggled then
-            lighting.Ambient = selectedAmbientColor
+        _G.autoStomp = Value
+        isLooping = Value
+        if Value then
+            startStomping()
+        else
+            stopStomping()
         end
     end
 })
 
-LeftGroupBox:AddLabel('Outdoor Ambient Color Picker'):AddColorPicker('OutdoorAmbientColorPicker', {
-    Default = Color3.fromRGB(120, 81, 169),  -- Default color
-    Title = 'Select Outdoor Ambient Color',
+local RunService = game:GetService("RunService")
+local player = game.Players.LocalPlayer
+local debris = game:GetService("Debris")  -- For cleanup
+
+local antiStompEnabled = false  -- Default value for anti-stomp toggle
+
+local HumanoidStateType = Enum.HumanoidStateType
+local KOD = "K.O"
+local GRABBING_CONSTRAINT = "GRABBING_CONSTRAINT"
+
+RightGroupBox:AddToggle('MyToggle', {
+    Text = 'anti-stomp',
+    Default = false, -- Default value (true / false)
+    Tooltip = 'prevents stomps',
+    
+    Callback = function(Value)
+        antiStompEnabled = Value  -- Update the toggle value
+    end
+})
+
+-- RunService heartbeat to monitor character state
+RunService.Heartbeat:Connect(function()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+
+    -- Check if the character and humanoid exist
+    if character and humanoid then
+        -- Use a variable for BodyEffects and K.O state to avoid repeated calls
+        local bodyEffects = character:FindFirstChild("BodyEffects")
+        local KOd = bodyEffects and bodyEffects[KOD] and bodyEffects[KOD].Value
+        local Grabbed = character:FindFirstChild(GRABBING_CONSTRAINT) ~= nil
+
+        -- Only execute if Anti Stomp is enabled
+        if antiStompEnabled and (KOd or Grabbed) then
+            -- Prevent interaction by disabling humanoid interactions
+            humanoid.PlatformStand = true  -- Disable normal character movements
+            humanoid.WalkSpeed = 0  -- Prevent walking
+            humanoid.JumpHeight = 0  -- Prevent jumping
+            humanoid.Health = 0  -- Force kill the character immediately
+
+            -- Disable collision to make it untouchable by other players
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false  -- Disable collision with other players
+                end
+            end
+
+            -- Disable unnecessary humanoid states
+            humanoid:SetStateEnabled(HumanoidStateType.Physics, false)
+            humanoid:SetStateEnabled(HumanoidStateType.Seated, false)
+            humanoid:SetStateEnabled(HumanoidStateType.Climbing, false)
+            humanoid:SetStateEnabled(HumanoidStateType.Freefall, false)
+            humanoid:SetStateEnabled(HumanoidStateType.Ragdoll, false)
+
+            -- Prevent health changes from other players
+            humanoid.MaxHealth = humanoid.Health
+
+            -- Clean up BodyEffects to remove any effects causing interaction
+            if bodyEffects then
+                bodyEffects:ClearAllChildren()
+            end
+
+            -- Prevent stomping or any other interaction from players
+            local collisionParts = character:GetChildren()
+            for _, part in pairs(collisionParts) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false  -- Fully prevent collision interactions
+                end
+            end
+
+            -- Immediately reset the character to remove any potential interaction
+            player:LoadCharacter()  -- Reload the character to reset the player
+        end
+    end
+end)
+
+RightGroupBox:AddToggle('ForceResetToggle', {
+    Text = 'force-reset',
+    Default = false,  -- Default value (true for enabled, false for disabled)
+    Tooltip = 'Toggle to force reset your character',
 
     Callback = function(Value)
-        selectedOutdoorAmbientColor = Value
-        if _G.AmbienceToggled then
-            lighting.OutdoorAmbient = selectedOutdoorAmbientColor
+        local Players = game:GetService("Players")
+        local StarterGui = game:GetService("StarterGui")
+        local player = Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+
+        if humanoid then
+            if Value then
+                -- Force reset when toggle is on
+                humanoid.Health = 0
+            else
+                -- No reset when toggle is off (can also clear the health or just keep it as is)
+            end
         end
     end
 })
 
-LeftGroupBox:AddLabel('Color Shift Bottom Picker'):AddColorPicker('ColorShiftBottomPicker', {
-    Default = Color3.fromRGB(120, 81, 169),  -- Default color
-    Title = 'Select Color Shift Bottom',
+RightGroupBox:AddToggle('MyToggle', {
+    Text = 'inf-zoom',
+    Default = false, -- Default value (true / false) 
+    Tooltip = 'Lets you zoom out infinitely', -- Information shown when you hover over the toggle
 
     Callback = function(Value)
-        selectedColorShiftBottom = Value
-        if _G.AmbienceToggled then
-            lighting.ColorShift_Bottom = selectedColorShiftBottom
+
+        -- Initialize zoom if it's not set
+        if _G.zoomInitialized == nil then
+            _G.zoomInitialized = false
+        end
+
+        if Value and not _G.zoomInitialized then
+            -- Enable Infinite Zoom
+            player.CameraMaxZoomDistance = math.huge
+
+            _G.zoomInitialized = true
+        elseif not Value and _G.zoomInitialized then
+            -- Disable Infinite Zoom
+            player.CameraMaxZoomDistance = 30
+
+            _G.zoomInitialized = false
         end
     end
 })
 
-LeftGroupBox:AddLabel('Color Shift Top Picker'):AddColorPicker('ColorShiftTopPicker', {
-    Default = Color3.fromRGB(120, 81, 169),  -- Default color
-    Title = 'Select Color Shift Top',
+getgenv().Time = 0.1 -- Delay for applying effects
+    getgenv().HeadlessOverlay = "rbxassetid://15093053680" -- Provided headless ID
 
-    Callback = function(Value)
-        selectedColorShiftTop = Value
-        if _G.AmbienceToggled then
-            lighting.ColorShift_Top = selectedColorShiftTop
-        end
-    end
-})
-
-LeftGroupBox:AddLabel('Fog Color Picker'):AddColorPicker('FogColorPicker', {
-    Default = Color3.fromRGB(120, 81, 169),  -- Default color
-    Title = 'Select Fog Color',
-
-    Callback = function(Value)
-        selectedFogColor = Value
-        if _G.AmbienceToggled then
-            lighting.FogColor = selectedFogColor
-        end
-    end
-})
-
-LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Speed')
-
-    --// Required Services and Variables
+    -- Services
+    local Players = game:GetService("Players")
     local RunService = game:GetService("RunService")
+    local StarterGui = game:GetService("StarterGui")
+
+    -- Cache player
+    local LocalPlayer = Players.LocalPlayer
+
+    -- Optimized Notify Function
+    local function notifyUser(title, text)
+    StarterGui:SetCore("SendNotification", {Title = title; Text = text; Duration = 5})
+    end
+
+    -- Apply Headless Effect (Hides the head)
+    local function applyHeadless()
+    local character = LocalPlayer.Character
+    if not character then return end
+
+    local head = character:FindFirstChild("Head")
+    if head and not head:GetAttribute("HeadlessApplied") then
+        head.Transparency = 1
+        head:SetAttribute("HeadlessApplied", true) -- Prevent redundant operations
+        local faceDecal = head:FindFirstChild("face")
+        if faceDecal then
+            faceDecal.Transparency = 1
+        end
+    end
+    end
+
+    -- Revert to Normal (Restores the head and face visibility)
+    local function revertToNormal()
+    local character = LocalPlayer.Character
+    if not character then return end
+
+    local head = character:FindFirstChild("Head")
+    if head and head:GetAttribute("HeadlessApplied") then
+        head.Transparency = 0
+        head:SetAttribute("HeadlessApplied", nil) -- Clear applied attribute
+        local faceDecal = head:FindFirstChild("face")
+        if faceDecal then
+            faceDecal.Transparency = 0
+        end
+    end
+    end
+
+    -- Continuously ensure the headless effect is applied when active
+    RunService.RenderStepped:Connect(function()
+    local character = LocalPlayer.Character
+    if character then
+        if _G.headlessEffectActive then
+            applyHeadless()
+        else
+            revertToNormal()
+        end
+    end
+    end)
+
+    -- Integration with Toggle
+    RightGroupBox:AddToggle('HeadlessToggle', {
+    Text = 'headless',
+    Default = false, -- Default value (true / false)
+    Tooltip = 'Toggle the headless effect on your character',
+
+    Callback = function(Value)
+        if Value then
+            -- Enable headless effect
+            _G.headlessEffectActive = true
+            applyHeadless()
+        else
+            -- Revert to normal
+            _G.headlessEffectActive = false
+            revertToNormal()
+        end
+    end
+    })
+
+LeftGroupBox = Tabs.Teleport:AddLeftGroupbox('Teleports')
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'Bank',
+    Func = function()
+        teleportCFrame = CFrame.new(-442, 39, -284)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'Inside Bank',
+    Func = function()
+        teleportCFrame = CFrame.new(-443, 23, -284)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'Vault',
+    Func = function()
+        teleportCFrame = CFrame.new(-658, -30, -285)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'Mid Appartment Building',
+    Func = function()
+        teleportCFrame = CFrame.new(-323, 80, -299)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'Revolver',
+    Func = function()
+        teleportCFrame = CFrame.new(-634, 21, -132)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'LMG',
+    Func = function()
+        teleportCFrame = CFrame.new(-626, 23, -295)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'Swimming Pool',
+    Func = function()
+        teleportCFrame = CFrame.new(-847, 21, -279)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'Broken Fire Station',
+    Func = function()
+        teleportCFrame = CFrame.new(-1182, 28, -521)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'DownHill',
+    Func = function()
+        teleportCFrame = CFrame.new(-559, 8, -735)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'Military Base',
+    Func = function()
+        teleportCFrame = CFrame.new(-40, 65, -926)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'Uphill',
+    Func = function()
+        teleportCFrame = CFrame.new(481, 48, -602)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'Breaking Bad',
+    Func = function()
+        teleportCFrame = CFrame.new(598, 28, -214)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'Church',
+    Func = function()
+        teleportCFrame = CFrame.new(205, 21, -124)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'Police Station',
+    Func = function()
+        teleportCFrame = CFrame.new(-264, 21, -93)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+MyButton = LeftGroupBox:AddButton({
+    Text = 'School',
+    Func = function()
+        teleportCFrame = CFrame.new(-594, 21, 173)  -- Change this to your desired coordinates
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
+    end,
+    DoubleClick = false,
+    Tooltip = 'Teleports you to the Bank'
+})
+
+local LeftGroupBox = Tabs.Misc:AddLeftGroupbox('Movement')
+
+local RunService = game:GetService("RunService")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
     local LocalPlayer = Players.LocalPlayer
@@ -2045,7 +2080,7 @@ LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Speed')
     Default = 'V',
     SyncToggleState = false,
     Mode = 'Toggle',
-    Text = 'Toggle CFrame Speed',
+    Text = 'CFrame Speed',
     NoUI = false,
     Callback = function(value)
         if value and typeof(value) == "EnumItem" then
@@ -2060,7 +2095,7 @@ LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Speed')
     })
 
     LeftGroupBox:AddSlider('CframeSpeedSlider', {
-    Text = 'CFrame Speed Amount',
+    Text = 'Speed Amount',
     Default = 150,
     Min = 16,
     Max = 1000,
@@ -2091,10 +2126,9 @@ LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Speed')
     end
     end)
 
-    LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Fly')
+LeftGroupBox:AddLabel('')
 
-    --// Required Services and Variables
-    local RunService = game:GetService("RunService")
+local RunService = game:GetService("RunService")
     local UserInputService = game:GetService("UserInputService")
     local Players = game:GetService("Players")
     local LocalPlayer = Players.LocalPlayer
@@ -2160,7 +2194,7 @@ LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Speed')
     Default = 'B',
     SyncToggleState = false,
     Mode = 'Toggle',
-    Text = 'Toggle Cframe Flight',
+    Text = 'Flight',
     NoUI = false,
 
     Callback = function(value)
@@ -2177,7 +2211,7 @@ LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Speed')
     })
 
     LeftGroupBox:AddSlider('CframeFlightSpeed', {
-    Text = 'CFrame Flight Speed',
+    Text = 'Flight Speed',
     Default = 250,
     Min = 16,
     Max = 2000,
@@ -2208,9 +2242,9 @@ LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Speed')
     end
     end)
 
- LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Fake Macro')
+LeftGroupBox:AddLabel('')
 
-    LeftGroupBox:AddToggle('MyToggle', {
+LeftGroupBox:AddToggle('MyToggle', {
         Text = 'Fake Macro',
         Default = false,
         Tooltip = 'Activates fake macro!',
@@ -2359,7 +2393,7 @@ LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Speed')
     
     -- Add Slider for emote duration
     LeftGroupBox:AddSlider('EmoteDuration', {
-        Text = 'Emote Duration (Seconds)',
+        Text = 'Emote Duration',
         Default = 1.6,
         Min = 0,
         Max = 2.5,
@@ -2374,7 +2408,7 @@ LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Speed')
     
     -- Add Slider for max speed
     LeftGroupBox:AddSlider('MaxSpeed', {
-        Text = 'Max Speed',
+        Text = 'Speed',
         Default = 300,
         Min = 16,
         Max = 1000, -- Adjust max limit as needed
@@ -2400,12 +2434,11 @@ LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Speed')
             print('[cb] Speed Increment changed! New value:', Value)
             speedIncrement = Value
         end
-    })    
+    })
 
- LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Jump settings') 
+LeftGroupBox:AddLabel('')
 
-    -- Function to handle enabling/disabling the no jump cooldown feature
-    local function toggleNoJumpCooldown(enabled)
+local function toggleNoJumpCooldown(enabled)
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoid = character:WaitForChild("Humanoid")
@@ -2428,7 +2461,7 @@ LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Speed')
 
     -- Add a toggle to the UI
     LeftGroupBox:AddToggle('NoJumpCooldownToggle', {
-    Text = 'Toggle No Jump Cooldown',
+    Text = 'no-jump cooldown',
     Default = false, -- Default value (true / false)
     Tooltip = 'Toggles the jump cooldown on or off', -- Information shown when you hover over the toggle
 
@@ -2447,9 +2480,7 @@ LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Speed')
     print("Found part:", part.Name)
     end
 
-    LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Anti Slow')
-
-    local gh = false -- Set to true to enable Anti-Slow, false to disable it.
+local gh = false -- Set to true to enable Anti-Slow, false to disable it.
     local debris = game:GetService("Debris") -- Access Debris service for cleanup
     local player = game.Players.LocalPlayer
     local toggleValue = false -- Store the current state of the toggle
@@ -2505,7 +2536,7 @@ LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Speed')
     -- Integrate with the UI toggle, add it only once
     if not _G.AntiSlowToggle then
     LeftGroupBox:AddToggle('MyToggle', {
-        Text = 'Anti Slow',
+        Text = 'anti-slow',
         Default = false, -- Default value (true / false)
         Tooltip = 'Removes any kind of slowness', -- Information shown when you hover over the toggle
 
@@ -2528,590 +2559,595 @@ LeftGroupBox = Tabs.Movement:AddLeftGroupbox('Speed')
     antiSlowToggle(toggleValue)  -- Apply the anti-slow based on the current toggle state
     end
 
-LeftGroupBox = Tabs.Misc:AddLeftGroupbox('Auto Stomp')
-
-    _G.autoStomp = _G.autoStomp or false  -- Default is false if not already set
-
-    if _G.autoStompReady == nil then
-    -- Ensures this part only runs once to save resources
-    _G.autoStompReady = true
-
-    -- Variables
-    local stompRemote = game.ReplicatedStorage.MainEvent -- The event you're firing
-    local player = game.Players.LocalPlayer
-    local stompInterval = 0.10 -- seconds between each stomp (default)
-    local isLooping = false -- Start with stomping disabled
-    local stompKey = Enum.KeyCode.F -- Default hotkey
-
-    -- Cache frequently used objects
-    local userInputService = game:GetService("UserInputService")
-    local runService = game:GetService("RunService")
-    local debrisService = game:GetService("Debris")
-    
-    -- Store common references once and reuse
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoid = character:WaitForChild("Humanoid")
-    
-    -- Store Enum values for reusability
-    local keyEnum = Enum.KeyCode.F
-
-    -- Function to display notifications
-    local function showNotification(title, text, duration)
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = title,
-            Text = text,
-            Duration = duration or 2 -- Default duration of 2 seconds
-        })
-    end
-
-    -- Function to start stomping with precise timing
-    local function startStomping()
-        local lastStompTime = tick()  -- Store the current time at the start
-        local stompConnection
-        stompConnection = runService.Heartbeat:Connect(function()
-            if isLooping then
-                local currentTime = tick()
-                if currentTime - lastStompTime >= stompInterval then
-                    if humanoid and humanoid.Parent then
-                        stompRemote:FireServer("Stomp")
-                        lastStompTime = currentTime  -- Update the last stomp time
-                    end
-                end
-            end
-        end)
-        _G.stompConnection = stompConnection
-    end
-
-    -- Function to stop stomping
-    local function stopStomping()
-        if _G.stompConnection then
-            _G.stompConnection:Disconnect()
-            _G.stompConnection = nil
-        end
-    end
-
-    -- Function to toggle stomping with the F key or any configured key
-    local function onKeyPress(input, gameProcessed)
-        if not gameProcessed then
-            if _G.autoStomp and input.KeyCode == stompKey then
-                isLooping = not isLooping
-                if isLooping then
-                    showNotification("Auto Stomp Enabled", "Vilant Exploit", 3)
-                    startStomping()  -- Now calling startStomping properly
-                else
-                    showNotification("Auto Stomp Disabled", "Vilant Exploit", 3)
-                    stopStomping()
-                end
-            end
-        end
-    end
-
-    -- UI Integration
-    LeftGroupBox:AddToggle('MyToggle', {
-        Text = 'Toggle Auto Stomp',
-        Default = false, -- Default value (true / false)
-        Tooltip = 'Toggles Stomps when walking over players', -- Information shown when you hover over the toggle
-        Callback = function(Value)
-            print('[cb] MyToggle changed to:', Value)
-            _G.autoStomp = Value
-            if _G.autoStomp then
-                showNotification("Auto Stomp Enabled", "Vilant Exploit", 3)
-            else
-                showNotification("Auto Stomp Disabled", "Vilant Exploit", 3)
-            end
-        end
-    })
-
-    LeftGroupBox:AddLabel('Keybind'):AddKeyPicker('KeyPicker', {
-        Default = 'F', -- String as the name of the keybind (MB1, MB2 for mouse buttons)
-        SyncToggleState = false,
-        Mode = 'Toggle', -- Modes: Always, Toggle, Hold
-        Text = 'Auto Stomp', -- Text to display in the keybind menu
-        NoUI = false, -- Set to true if you want to hide from the Keybind menu
-        Callback = function(Value)
-            print('[cb] Keybind clicked!', Value)
-        end,
-        ChangedCallback = function(New)
-            print('[cb] Keybind changed!', New)
-            stompKey = New -- Update the hotkey dynamically when changed
-        end
-    })
-
-    LeftGroupBox:AddSlider('MySlider', {
-        Text = 'Time between stomps',
-        Default = stompInterval,
-        Min = 0,
-        Max = 1,
-        Rounding = 1,
-        Compact = false,
-        Callback = function(Value)
-            print('[cb] MySlider was changed! New value:', Value)
-            stompInterval = Value -- Update stomp interval value dynamically
-
-            -- Restart the stomping loop if it's running
-            if isLooping then
-                stopStomping()  -- Stop the current stomping loop
-                startStomping() -- Restart it with the new interval
-            end
-        end
-    })
-
-    -- Connect key press event if autoStomp is true
-    _G.autoStompKeyConnection = userInputService.InputBegan:Connect(onKeyPress)
-
-    else
-    -- Ensure the key press event is only active if autoStomp is true
-    if _G.autoStomp then
-        -- Disconnect the key press event
-        if _G.autoStompKeyConnection then
-            _G.autoStompKeyConnection:Disconnect()
-            _G.autoStompKeyConnection = nil
-        end
-
-        -- Reset the stomp loop
-        _G.autoStomp = false
-    end
-    _G.autoStompReady = nil
-    end
-
-  LeftGroupBox = Tabs.Misc:AddLeftGroupbox('Tp Stomp')
-
-    -- Predefine commonly used services
-    local gameReplicatedStorage = game:GetService("ReplicatedStorage")
-    local userInputService = game:GetService("UserInputService")
-    local starterGui = game:GetService("StarterGui")
-    local runService = game:GetService("RunService")
-
-    -- Optimize FindFirstChild usage
-    local function findChild(parent, name)
-    return parent:FindFirstChild(name)
-    end
-
-    -- Object Pooling for Repeatedly Used Instances (e.g., BodyEffects)
-    local function getBodyEffects(player)
-    return findChild(player.Character, "BodyEffects")
-    end
-
-    -- UI Setup for Tp Stomp Toggle
-    LeftGroupBox:AddToggle('MyToggle', {
-    Text = 'Toggle Tp Stomp',
-    Default = false,
-    Tooltip = 'Toggle Teleporting to players and stomping',
-    Callback = function(Value)
-        _G.autoTP = Value
-        if Value then
-        end
-        print('[cb] MyToggle changed to:', Value)
-    end
-    })
-
-    -- UI Setup for Tp Back Toggle
-    LeftGroupBox:AddToggle('TpBackToggle', {
-    Text = 'Tp back to original position',
-    Default = false,
-    Tooltip = 'This makes it so after each stomp it tps back to your original position',
-    Callback = function(Value)
-        _G.tpBackToOriginal = Value
-        print('[cb] Tp Back Toggle changed to:', Value)
-    end
-    })
-
-    -- Keybind for Tp Stomp
-    LeftGroupBox:AddLabel('Keybind'):AddKeyPicker('KeyPicker', {
-    Default = 'F',
-    SyncToggleState = false,
-    Mode = 'Hold',
-    Text = 'Tp Stomp Keybind',
-    NoUI = false,
-    Callback = function(Value)
-        print('[cb] Keybind clicked!', Value)
-    end,
-    ChangedCallback = function(New)
-        _G.tpStompKey = New
-        print('[cb] Keybind changed to:', New)
-    end
-    })
-
-    -- Slider to change teleport range (studs)
-    LeftGroupBox:AddSlider('MySlider', {
-    Text = 'Teleport Range',
-    Default = 100,
-    Min = 0,
-    Max = 5000,
-    Rounding = 0,
-    Compact = false,
-    Callback = function(Value)
-        _G.teleportRange = Value
-        print('[cb] MySlider was changed! New value:', Value)
-    end
-    })
-
-    -- Script for teleportation functionality
-    if _G.autoTP == nil then
-    _G.autoTP = false
-    end
-
-    if _G.autoTPReady == nil then
-    _G.autoTPReady = true
-
-    -- Variables
-    local player = game.Players.LocalPlayer
-    _G.teleportRange = _G.teleportRange or 100 -- Set default range if not set
-    _G.tpStompKey = _G.tpStompKey or Enum.KeyCode.F -- Default key for teleport stomp
-    _G.tpBackToOriginal = _G.tpBackToOriginal == nil and false or _G.tpBackToOriginal
-
-    -- Function to display notifications
-    local function showNotification(title, text, duration)
-        starterGui:SetCore("SendNotification", {
-            Title = title,
-            Text = text,
-            Duration = duration or 2 -- Default duration of 2 seconds
-        })
-    end
-
-    -- Function to find the nearest knocked player within range
-    local function findNearestKnockedPlayer()
-        local nearestPlayer = nil
-        local shortestDistance = _G.teleportRange
-
-        for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-            if otherPlayer ~= player and otherPlayer.Character then
-                local bodyEffects = getBodyEffects(otherPlayer)
-                local isKnocked = bodyEffects and findChild(bodyEffects, "K.O") and bodyEffects["K.O"].Value == true
-                if isKnocked then
-                    local torso = findChild(otherPlayer.Character, "UpperTorso") or findChild(otherPlayer.Character, "LowerTorso")
-                    local playerRoot = findChild(player.Character, "HumanoidRootPart")
-                    if torso and playerRoot then
-                        local distance = (playerRoot.Position - torso.Position).Magnitude
-                        if distance <= _G.teleportRange and distance < shortestDistance then
-                            shortestDistance = distance
-                            nearestPlayer = otherPlayer
-                        end
-                    end
-                end
-            end
-        end
-        return nearestPlayer
-    end
-
-    -- Function to teleport above a knocked player's torso, stomp, and teleport back (based on Tp Back toggle)
-    local function teleportAndStomp(targetPlayer)
-        if targetPlayer and targetPlayer.Character then
-            local targetHumanoid = findChild(targetPlayer.Character, "Humanoid")
-            local torso = findChild(targetPlayer.Character, "UpperTorso") or findChild(targetPlayer.Character, "LowerTorso")
-            local playerRoot = findChild(player.Character, "HumanoidRootPart")
-
-            if targetHumanoid and torso and playerRoot then
-                -- Save the original position
-                local originalPosition = playerRoot.CFrame
-
-                -- Teleport above the player's torso (3 studs above)
-                playerRoot.CFrame = CFrame.new(torso.Position + Vector3.new(0, 3, 0))
-
-                -- Wait 0.35 seconds before stomping
-                wait(0.35)
-
-                -- Trigger the stomp action
-                gameReplicatedStorage.MainEvent:FireServer("Stomp")
-
-                -- Notify about the stomp
-                showNotification("Stomping", "Vilant Exploit", 3)
-
-                -- Wait 0.10 seconds before teleporting back (if TpBack is enabled)
-                wait(0.20)
-
-                if _G.tpBackToOriginal then
-                    -- Teleport back to the original position
-                    playerRoot.CFrame = originalPosition
-                end
-            end
-        else
-            showNotification("No Target Found", "Vilant Exploit", 3)
-        end
-    end
-
-    -- Function to handle key press
-    local function onKeyPress(input)
-        if _G.autoTP and input.KeyCode == _G.tpStompKey then
-            local targetPlayer = findNearestKnockedPlayer()
-            teleportAndStomp(targetPlayer)
-        end
-    end
-
-    -- Connect key press event
-    _G.autoTPKeyConnection = userInputService.InputBegan:Connect(onKeyPress)
-    else
-    -- Disconnect the key press event
-    if _G.autoTPKeyConnection then
-        _G.autoTPKeyConnection:Disconnect()
-        _G.autoTPKeyConnection = nil
-    end
-
-    -- Reset the script state
-    _G.autoTP = false
-    _G.autoTPReady = nil
-    end
-
-LeftGroupBox = Tabs.Misc:AddLeftGroupbox('Anti Stomp')
-
 local RunService = game:GetService("RunService")
-local player = game.Players.LocalPlayer
-local debris = game:GetService("Debris")  -- For cleanup
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local MainEvent = ReplicatedStorage:WaitForChild("MainEvent")
 
--- Assuming LeftGroupBox and other UI elements are set up previously
-local antiStompEnabled = false  -- Default value for anti-stomp toggle
+-- Variables for tool and ammo
+local tool
+local ammoValue
 
--- Cache Enum values that are used frequently
-local HumanoidStateType = Enum.HumanoidStateType
-local KOD = "K.O"
-local GRABBING_CONSTRAINT = "GRABBING_CONSTRAINT"
+-- Pool for animation connection
+local animationConnection
 
--- Add the Anti Stomp toggle
-LeftGroupBox:AddToggle('MyToggle', {
-    Text = 'Anti Stomp',
+-- Function to handle Auto Reload
+local function handleAutoReload()
+    tool = LocalPlayer.Character:FindFirstChildWhichIsA("Tool")
+
+    if tool and tool:FindFirstChild("Ammo") then
+        ammoValue = tool.Ammo.Value
+        if ammoValue <= 0 then
+            MainEvent:FireServer("Reload", tool)
+        end
+    end
+end
+
+-- Function to handle Silent Reload setup (with animation stop)
+local function setupSilentReload(Value)
+    -- Check if the player has a character
+    if LocalPlayer.Character then
+        local humanoid = LocalPlayer.Character:WaitForChild("Humanoid")
+        local targetAnimationId = "rbxassetid://2877910736"
+
+        -- Stop any existing connections to Heartbeat
+        if animationConnection then
+            animationConnection:Disconnect()
+        end
+
+        -- Function to check and stop animation only when enabled
+        if Value then
+            local function checkAnimations()
+                local playingAnimations = humanoid:GetPlayingAnimationTracks()
+                for _, animationTrack in pairs(playingAnimations) do
+                    local animation = animationTrack.Animation
+                    if animation.AnimationId == targetAnimationId then
+                        animationTrack:Stop()
+                    end
+                end
+            end
+
+            -- Reconnect the heartbeat listener if Silent Reload is enabled
+            animationConnection = RunService.Heartbeat:Connect(checkAnimations)
+        end
+    end
+end
+
+-- Optimized AutoReload Toggle
+RightGroupBox:AddToggle('AutoReloadToggle', {
+    Text = 'Auto Reload',
     Default = false, -- Default value (true / false)
-    Tooltip = 'Destroys character when knocked preventing stomps',
-    
+    Tooltip = 'Reloads Automatically when 0 ammo', -- Information shown when you hover over the toggle
+
     Callback = function(Value)
-        antiStompEnabled = Value  -- Update the toggle value
+        _G.AutoReload = Value -- Set AutoReload based on the toggle state
     end
 })
 
--- RunService heartbeat to monitor character state
+-- Silent Reload Toggle with animation cleanup
+RightGroupBox:AddToggle('SilentReloadToggle', {
+    Text = 'Silent Reload',
+    Default = false, -- Default value (true / false)
+    Tooltip = 'Reloads Silently', -- Information shown when you hover over the toggle
+
+    Callback = function(Value)
+        -- Apply the Silent Reload setup each time the toggle is changed
+        setupSilentReload(Value)
+
+        -- If the player dies and respawns, reset Silent Reload setup
+        LocalPlayer.CharacterAdded:Connect(function()
+            setupSilentReload(Value)
+        end)
+    end
+})
+
+-- Ensure auto reload is functioning right from the start if enabled
 RunService.Heartbeat:Connect(function()
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if _G.AutoReload then
+        handleAutoReload()
+    end
+end)
 
-    -- Check if the character and humanoid exist
-    if character and humanoid then
-        -- Use a variable for BodyEffects and K.O state to avoid repeated calls
-        local bodyEffects = character:FindFirstChild("BodyEffects")
-        local KOd = bodyEffects and bodyEffects[KOD] and bodyEffects[KOD].Value
-        local Grabbed = character:FindFirstChild(GRABBING_CONSTRAINT) ~= nil
+-- Cleanup function for removing unused objects or connections
+local function cleanup()
+    if animationConnection then
+        animationConnection:Disconnect()
+    end
+end
 
-        -- Only execute if Anti Stomp is enabled
-        if antiStompEnabled and (KOd or Grabbed) then
-            -- Prevent interaction by disabling humanoid interactions
-            humanoid.PlatformStand = true  -- Disable normal character movements
-            humanoid.WalkSpeed = 0  -- Prevent walking
-            humanoid.JumpHeight = 0  -- Prevent jumping
-            humanoid.Health = 0  -- Force kill the character immediately
+-- Use Debris service for cleanup (if necessary in your context)
+game:GetService("Debris"):AddItem(animationConnection, 5)
 
-            -- Disable collision to make it untouchable by other players
-            for _, part in pairs(character:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false  -- Disable collision with other players
-                end
+-- Ensure auto reload is functioning right from the start if enabled
+RunService.Heartbeat:Connect(function()
+    if _G.AutoReload then
+        handleAutoReload()
+    end
+end)
+
+RightGroupBox = Tabs.Misc:AddRightGroupbox('Player Detections')
+
+if _G.staffCheckerEnabled == nil then
+    _G.staffCheckerEnabled = false -- Default value
+end
+
+RightGroupBox:AddToggle('MyToggle', {
+    Text = 'anti-staff',
+    Default = _G.staffCheckerEnabled,
+    Tooltip = 'Enables real-time staff detection',
+
+    Callback = function(Value)
+        _G.staffCheckerEnabled = Value
+        if Value then
+            enableStaffChecker()
+        else
+            disableStaffChecker()
+        end
+        print('[Staff Checker] Toggled:', Value)
+    end
+})
+
+-- Anti-Staff logic
+function isStaff(player)
+    -- Check if the player has the "Staff" role or badge
+    -- Modify this depending on how the game defines staff players
+    local isStaff = player.HasStaffRole or false  -- Example, adjust this condition based on your game's staff identification system
+    return isStaff
+end
+
+function enableStaffChecker()
+    -- Example function where you can disable actions for staff players
+    game.Players.PlayerAdded:Connect(function(player)
+        if isStaff(player) then
+            print("Anti-Staff Detected: " .. player.Name)
+            if game.Players.LocalPlayer == player then
+                -- Kicks the player running the script if they are a staff member
+                game.Players.LocalPlayer:Kick("Anti-Staff Detected: You are a staff member and cannot interact.")
             end
+        else
+            -- Regular logic here for non-staff players
+            print(player.Name .. " is not a staff member.")
+        end
+    end)
+end
 
-            -- Disable unnecessary humanoid states
-            humanoid:SetStateEnabled(HumanoidStateType.Physics, false)
-            humanoid:SetStateEnabled(HumanoidStateType.Seated, false)
-            humanoid:SetStateEnabled(HumanoidStateType.Climbing, false)
-            humanoid:SetStateEnabled(HumanoidStateType.Freefall, false)
-            humanoid:SetStateEnabled(HumanoidStateType.Ragdoll, false)
+function disableStaffChecker()
+    -- Disable the staff checking functionality if toggled off
+    print("Staff Checker is disabled.")
+end
 
-            -- Prevent health changes from other players
-            humanoid.MaxHealth = humanoid.Health
 
-            -- Clean up BodyEffects to remove any effects causing interaction
-            if bodyEffects then
-                bodyEffects:ClearAllChildren()
+if _G.staffCheckerEnabled == nil then
+    _G.staffCheckerEnabled = false -- Default value
+end
+
+RightGroupBox:AddToggle('MyToggle', {
+    Text = 'anti-star',
+    Default = _G.staffCheckerEnabled,
+    Tooltip = 'Enables real-time staff detection and prevents stars from being checked',
+
+    Callback = function(Value)
+        _G.staffCheckerEnabled = Value
+        if Value then
+            enableStaffChecker()
+        else
+            disableStaffChecker()
+        end
+        print('[Star Checker] Toggled:', Value)
+    end
+})
+
+-- Anti-Star logic
+function isStar(player)
+    -- Check if the player has the "Star" role or badge
+    -- Modify this depending on how the game handles stars; this is an example
+    local isStar = player.HasStar or false  -- This could be changed depending on how the game flags Star players
+    return isStar
+end
+
+function enableStaffChecker()
+    -- Example function where you can disable actions for Star players
+    game.Players.PlayerAdded:Connect(function(player)
+        if isStar(player) then
+            print("Anti-Star Detected: " .. player.Name)
+            if game.Players.LocalPlayer == player then
+                -- Kicks the player running the script if they are a star
+                game.Players.LocalPlayer:Kick("Anti-Star Detected: You are a Star and cannot interact.")
             end
+        else
+            -- Regular staff checker logic here for non-Star players
+            print(player.Name .. " is not a star.")
+        end
+    end)
+end
 
-            -- Prevent stomping or any other interaction from players
-            local collisionParts = character:GetChildren()
-            for _, part in pairs(collisionParts) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false  -- Fully prevent collision interactions
-                end
+function disableStaffChecker()
+    -- Disable the star checking functionality if toggled off
+    print("Star Checker is disabled.")
+end
+
+if _G.verifyCheckerEnabled == nil then
+    _G.verifyCheckerEnabled = false -- Default value
+end
+
+RightGroupBox:AddToggle('MyToggle', {
+    Text = 'anti-verified',
+    Default = _G.verifyCheckerEnabled,
+    Tooltip = 'Enables real-time verified player detection',
+
+    Callback = function(Value)
+        _G.verifyCheckerEnabled = Value
+        if Value then
+            enableVerifyChecker()
+        else
+            disableVerifyChecker()
+        end
+        print('[Verified Checker] Toggled:', Value)
+    end
+})
+
+-- Anti-Verified logic
+function isVerified(player)
+    -- Check if the player has the "Verified" role or badge
+    -- Modify this depending on how the game defines verified players
+    local isVerified = player.HasVerifiedBadge or false  -- Example, adjust this condition based on your game's system for verified players
+    return isVerified
+end
+
+function enableVerifyChecker()
+    -- Example function where you can disable actions for verified players
+    game.Players.PlayerAdded:Connect(function(player)
+        if isVerified(player) then
+            print("Anti-Verified Detected: " .. player.Name)
+            if game.Players.LocalPlayer == player then
+                -- Kicks the player running the script if they are verified
+                game.Players.LocalPlayer:Kick("Anti-Verified Detected: You are a verified player and cannot interact.")
             end
+        else
+            -- Regular logic for non-verified players
+            print(player.Name .. " is not verified.")
+        end
+    end)
+end
 
-            -- Immediately reset the character to remove any potential interaction
-            player:LoadCharacter()  -- Reload the character to reset the player
+function disableVerifyChecker()
+    -- Disable the verified player checking functionality if toggled off
+    print("Verified Checker is disabled.")
+end
+
+RightGroupBox:AddLabel('kicks u when they are in ur server.')
+
+RightGroupBox = Tabs.Misc:AddRightGroupbox('Animations')
+
+    Players = game:GetService("Players")  -- Store the Players service in a variable
+    player = Players.LocalPlayer  -- Store the LocalPlayer in a variable
+
+    -- Base URL for the animation assets
+    animationBaseUrl = "http://www.roblox.com/asset/?id="
+
+    -- Table of animations with optimized base URL usage
+    animations = {
+    R15 = {
+        idle = animationBaseUrl .. "2510196951",
+        walk = animationBaseUrl .. "2510202577",
+        run = animationBaseUrl .. "2510198475",
+        jump = animationBaseUrl .. "2510197830",
+        climb = animationBaseUrl .. "2510192778",
+        fall = animationBaseUrl .. "2510195892",
+    },
+    Loser = {
+        idle = animationBaseUrl .. "782841498",
+        walk = animationBaseUrl .. "616168032",
+        run = animationBaseUrl .. "616163682",
+        jump = animationBaseUrl .. "1083218792",
+        climb = animationBaseUrl .. "1083439238",
+        fall = animationBaseUrl .. "707829716",
+    },
+    Astronaut = {
+        idle = animationBaseUrl .. "891621366",
+        jump = animationBaseUrl .. "891627522",
+        fall = animationBaseUrl .. "891617961",
+        walk = animationBaseUrl .. "891667138",
+        run = animationBaseUrl .. "891636393",
+        climb = animationBaseUrl .. "891609353",
+    },
+    Bubbly = {
+        idle = animationBaseUrl .. "910004836",
+        jump = animationBaseUrl .. "910016857",
+        fall = animationBaseUrl .. "910001910",
+        walk = animationBaseUrl .. "910034870",
+        run = animationBaseUrl .. "910025107",
+        climb = animationBaseUrl .. "940996062",
+    },
+    Cartoony = {
+        idle = animationBaseUrl .. "742637544",
+        jump = animationBaseUrl .. "742637942",
+        fall = animationBaseUrl .. "742637151",
+        walk = animationBaseUrl .. "742640026",
+        run = animationBaseUrl .. "742638842",
+        climb = animationBaseUrl .. "742636889",
+    },
+    Confident = {
+        idle = animationBaseUrl .. "1069977950",
+        jump = animationBaseUrl .. "1069984524",
+        fall = animationBaseUrl .. "1069973677",
+        walk = animationBaseUrl .. "1070017263",
+        run = animationBaseUrl .. "1070001516",
+        climb = animationBaseUrl .. "1069946257",
+    },
+    Cowboy = {
+        idle = animationBaseUrl .. "1014390418",
+        jump = animationBaseUrl .. "1014394726",
+        fall = animationBaseUrl .. "1014384571",
+        walk = animationBaseUrl .. "1014421541",
+        run = animationBaseUrl .. "1014401683",
+        climb = animationBaseUrl .. "1014380606",
+    },
+    Elder = {
+        idle = animationBaseUrl .. "845397899",
+        jump = animationBaseUrl .. "845398858",
+        fall = animationBaseUrl .. "845396048",
+        walk = animationBaseUrl .. "845403856",
+        run = animationBaseUrl .. "845386501",
+        climb = animationBaseUrl .. "845392038",
+    },
+    Knight = {
+        idle = animationBaseUrl .. "657595757",
+        jump = animationBaseUrl .. "658409194",
+        fall = animationBaseUrl .. "657600338",
+        walk = animationBaseUrl .. "657552124",
+        run = animationBaseUrl .. "657564596",
+        climb = animationBaseUrl .. "658360781",
+    },
+    Levitation = {
+        idle = animationBaseUrl .. "616006778",
+        jump = animationBaseUrl .. "616008936",
+        fall = animationBaseUrl .. "616005863",
+        walk = animationBaseUrl .. "616013216",
+        run = animationBaseUrl .. "616010382",
+        climb = animationBaseUrl .. "616003713",
+    },
+    Mage = {
+        idle = animationBaseUrl .. "707742142",
+        jump = animationBaseUrl .. "707853694",
+        fall = animationBaseUrl .. "707829716",
+        walk = animationBaseUrl .. "707897309",
+        run = animationBaseUrl .. "707861613",
+        climb = animationBaseUrl .. "707826056",
+    },
+    Ninja = {
+        idle = animationBaseUrl .. "656117400",
+        jump = animationBaseUrl .. "656117878",
+        fall = animationBaseUrl .. "656115606",
+        walk = animationBaseUrl .. "656121766",
+        run = animationBaseUrl .. "656118852",
+        climb = animationBaseUrl .. "656114359",
+    },
+    Patrol = {
+        idle = animationBaseUrl .. "1149612882",
+        jump = animationBaseUrl .. "1148811837",
+        fall = animationBaseUrl .. "1148863382",
+        walk = animationBaseUrl .. "1151231493",
+        run = animationBaseUrl .. "1150967949",
+        climb = animationBaseUrl .. "1148811837",
+    },
+    Pirate = {
+        idle = animationBaseUrl .. "750781874",
+        jump = animationBaseUrl .. "750782230",
+        fall = animationBaseUrl .. "750780242",
+        walk = animationBaseUrl .. "750785693",
+        run = animationBaseUrl .. "750783738",
+        climb = animationBaseUrl .. "750779899",
+    },
+    Popstar = {
+        idle = animationBaseUrl .. "1212900985",
+        jump = animationBaseUrl .. "1212954642",
+        fall = animationBaseUrl .. "1212900995",
+        walk = animationBaseUrl .. "1212980338",
+        run = animationBaseUrl .. "1212980348",
+        climb = animationBaseUrl .. "1213044953",
+    },
+    Princess = {
+        idle = animationBaseUrl .. "941003647",
+        jump = animationBaseUrl .. "941008832",
+        fall = animationBaseUrl .. "941000007",
+        walk = animationBaseUrl .. "941028902",
+        run = animationBaseUrl .. "941015281",
+        climb = animationBaseUrl .. "940996062",
+    },
+    Robot = {
+        idle = animationBaseUrl .. "616088211",
+        jump = animationBaseUrl .. "616090535",
+        fall = animationBaseUrl .. "616087089",
+        walk = animationBaseUrl .. "616095330",
+        run = animationBaseUrl .. "616091570",
+        climb = animationBaseUrl .. "616086039",
+    },
+    Sneaky = {
+        idle = animationBaseUrl .. "1132473842",
+        jump = animationBaseUrl .. "1132489853",
+        fall = animationBaseUrl .. "1132469004",
+        walk = animationBaseUrl .. "1132510133",
+        run = animationBaseUrl .. "1132494274",
+        climb = animationBaseUrl .. "1132461372",
+    },
+    Stylish = {
+        idle = animationBaseUrl .. "616136790",
+        jump = animationBaseUrl .. "616139451",
+        fall = animationBaseUrl .. "616134815",
+        walk = animationBaseUrl .. "616146177",
+        run = animationBaseUrl .. "616140816",
+        climb = animationBaseUrl .. "616133594",
+    },
+    Superhero = {
+        idle = animationBaseUrl .. "616111295",
+        jump = animationBaseUrl .. "616115533",
+        fall = animationBaseUrl .. "616108001",
+        walk = animationBaseUrl .. "616122287",
+        run = animationBaseUrl .. "616117076",
+        climb = animationBaseUrl .. "616104706",
+    },
+    Toy = {
+        idle = animationBaseUrl .. "782841498",
+        jump = animationBaseUrl .. "782847020",
+        fall = animationBaseUrl .. "782846423",
+        walk = animationBaseUrl .. "782843345",
+        run = animationBaseUrl .. "782842708",
+        climb = animationBaseUrl .. "782843869",
+    },
+    Vampire = {
+        idle = animationBaseUrl .. "1083445855",
+        jump = animationBaseUrl .. "1083455352",
+        fall = animationBaseUrl .. "1083443587",
+        walk = animationBaseUrl .. "1083473930",
+        run = animationBaseUrl .. "1083462077",
+        climb = animationBaseUrl .. "1083439238",
+    },
+    Werewolf = {
+        idle = animationBaseUrl .. "1083195517",
+        jump = animationBaseUrl .. "1083218792",
+        fall = animationBaseUrl .. "1083189019",
+        walk = animationBaseUrl .. "1083178339",
+        run = animationBaseUrl .. "1083216690",
+        climb = animationBaseUrl .. "1083182000",
+    },
+    Zombie = {
+        idle = animationBaseUrl .. "616158929",
+        jump = animationBaseUrl .. "616161997",
+        fall = animationBaseUrl .. "616157476",
+        walk = animationBaseUrl .. "616168032",
+        run = animationBaseUrl .. "616163682",
+        climb = animationBaseUrl .. "616156119",
+    },
+    RealisticZombie = {
+        idle = animationBaseUrl .. "3489171152",
+        jump = animationBaseUrl .. "616161997",
+        fall = animationBaseUrl .. "616157476",
+        walk = animationBaseUrl .. "3489174223",
+        run = animationBaseUrl .. "3489173414",
+        climb = animationBaseUrl .. "616156119", 
+    },
+    }
+
+    -- Function to apply animations based on the selected preset
+    local function applyAnimations(animate, preset)
+    -- Ensure the animation IDs are applied correctly
+    if animate and preset then
+        if animate.idle and animate.idle:FindFirstChild("Animation1") then
+            animate.idle.Animation1.AnimationId = preset.idle
+        else
+            warn("Idle animation or Animation1 not found")
+        end
+        
+        if animate.walk and animate.walk:FindFirstChild("WalkAnim") then
+            animate.walk.WalkAnim.AnimationId = preset.walk
+        else
+            warn("Walk animation or WalkAnim not found")
+        end
+
+        if animate.run and animate.run:FindFirstChild("RunAnim") then
+            animate.run.RunAnim.AnimationId = preset.run
+        else
+            warn("Run animation or RunAnim not found")
+        end
+
+        if animate.jump and animate.jump:FindFirstChild("JumpAnim") then
+            animate.jump.JumpAnim.AnimationId = preset.jump
+        else
+            warn("Jump animation or JumpAnim not found")
+        end
+
+        if animate.climb and animate.climb:FindFirstChild("ClimbAnim") then
+            animate.climb.ClimbAnim.AnimationId = preset.climb
+        else
+            warn("Climb animation or ClimbAnim not found")
+        end
+
+        if animate.fall and animate.fall:FindFirstChild("FallAnim") then
+            animate.fall.FallAnim.AnimationId = preset.fall
+        else
+            warn("Fall animation or FallAnim not found")
+        end
+    end
+    end
+
+    -- Function to apply the selected animation preset to the player's character
+    local function applySelectedAnimations(character)
+    -- Ensure the character has the Animate object
+    local animate = character:FindFirstChild("Animate")
+    if animate then
+        local selectedPreset = animations[currentAnimationPreset]  -- Use the preset based on the dropdown
+        applyAnimations(animate, selectedPreset)
+    end
+    end
+
+    -- Set up the dropdown to choose which animation preset to apply
+    RightGroupBox:AddDropdown('AnimationSelector', {
+    Values = {'R15', 'Loser', 'Astronaut', 'Bubbly', 'Cartoony', 'Confident', 'Cowboy', 'Elder', 'Knight', 'Levitation', 'Mage', 'Ninja', 'Patrol', 'Pirate', 'Popstar', 'Princess', 'Robot', 'Sneaky', 'Stylish', 'Superhero', 'Toy', 'Vampire', 'Werewolf', 'Zombie', 'RealisticZombie'}, -- Add new presets here if needed
+    Default = 1, -- Default option (R15)
+    Multi = false, -- Allow single selection only
+
+    Text = 'Select Animation',
+    Tooltip = 'Choose the animation you want to apply',
+
+    Callback = function(Value)
+        currentAnimationPreset = Value  -- Update the preset based on the dropdown selection
+    end
+    })
+
+    -- Connect to Heartbeat and apply the animation every frame
+    game:GetService("RunService").Heartbeat:Connect(function()
+    if player.Character then
+        applySelectedAnimations(player.Character)  -- Apply the selected animation
+    end
+    end)
+
+local LeftGroupBox = Tabs.Misc:AddLeftGroupbox('Desync')
+
+local Toggle = LeftGroupBox:AddToggle('Desync', {
+    Text = 'extreme desync',
+    Default = false,
+    Tooltip = 'Players see ur character teleporting and dissapearing',
+
+    Callback = function(Value)
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "extreme desync",
+            Text = Value and "on" or "off",
+            Duration = 3,
+        })
+    end
+})
+
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+RunService.Heartbeat:Connect(function()
+    if Toggle.Value then
+        local Character = LocalPlayer.Character
+        if Character and Character:FindFirstChild("HumanoidRootPart") then
+            local RootPart = Character.HumanoidRootPart
+            local v = RootPart.Velocity
+            RootPart.CFrame = RootPart.CFrame * CFrame.Angles(0, math.rad(0.01), 0)
+
+            local randomVelocity = Vector3.new(
+                math.random(-3000, 3000),
+                math.random(-3000, 3000),
+                math.random(-3000, 3000)
+            )
+
+            RootPart.Velocity = randomVelocity
+            RunService.RenderStepped:Wait()
+            RootPart.Velocity = v
         end
     end
 end)
 
-LeftGroupBox = Tabs.Misc:AddLeftGroupbox('Spin Bot')
-
---[[ 
-Controls:
-- Use the toggle in the UI to enable or disable SpinBot.
-- Use the slider to adjust the SpinBot speed.
-]]
-
--- Ensure proper initialization
-if _G.spinBotInitialized == nil then
-    _G.spinBotInitialized = false
-end
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local plr = Players.LocalPlayer
-local humRoot, humanoid
-
--- Function to apply SpinBot
-local function applySpinBot()
-    if _G.spinBotActive and humRoot and humanoid then
-        humanoid.AutoRotate = false
-        local velocity = Instance.new("AngularVelocity")
-        velocity.Attachment0 = humRoot:FindFirstChild("RootAttachment")
-        velocity.MaxTorque = math.huge
-        velocity.AngularVelocity = Vector3.new(0, _G.spinBotSpeed or 50, 0)
-        velocity.Parent = humRoot
-        velocity.Name = "Spinbot"
-    end
-end
-
--- Function to update character references
-local function updateCharacterReferences()
-    local character = plr.Character or plr.CharacterAdded:Wait()
-    humRoot = character:WaitForChild("HumanoidRootPart")
-    humanoid = character:FindFirstChildOfClass("Humanoid")
-    
-    -- Restore SpinBot after respawn if it was active
-    task.wait(0.5)
-    applySpinBot()
-end
-
-updateCharacterReferences()
-plr.CharacterAdded:Connect(updateCharacterReferences)
-
--- UI Toggle for SpinBot
-LeftGroupBox:AddToggle('SpinBotToggle', {
-    Text = 'Spin Bot',
-    Default = false,
-    Tooltip = 'Makes you spin',
-    Callback = function(Value)
-        if Value then
-            _G.spinBotActive = true
-            _G.spinBotInitialized = true
-            applySpinBot()
-        else
-            _G.spinBotActive = false
-            _G.spinBotInitialized = false
-            
-            if humRoot and humanoid then
-                humRoot.CFrame = CFrame.new(humRoot.Position)
-                humanoid.AutoRotate = true
-            end
-            
-            local velocity = humRoot and humRoot:FindFirstChild("Spinbot")
-            if velocity then
-                velocity:Destroy()
-            end
-        end
-    end
-})
-
--- UI Slider for SpinBot Speed
-LeftGroupBox:AddSlider('SpinBotSpeed', {
-    Text = 'SpinBot Speed',
-    Default = 50,
-    Min = 1,
-    Max = 150,
-    Rounding = 1,
-    Compact = false,
-    Callback = function(Value)
-        _G.spinBotSpeed = Value
-        if _G.spinBotActive and humRoot then
-            local velocity = humRoot:FindFirstChild("Spinbot")
-            if velocity then
-                velocity.AngularVelocity = Vector3.new(0, Value, 0)
-            end
-        end
-    end
-})
-
-LeftGroupBox = Tabs.Misc:AddLeftGroupbox('Avatar Forcefield')
-
-    -- References to services and default settings
-    local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
-    local player = Players.LocalPlayer
-
-    -- Constants for materials and default values
-    local FORCEFIELD_MATERIAL = Enum.Material.ForceField
-    local DEFAULT_MATERIAL = Enum.Material.Plastic
-    local DEFAULT_COLOR = Color3.fromRGB(255, 255, 255)
-    local currentColor = Color3.fromRGB(108, 59, 170) -- Default forcefield color
-    local forcefieldEnabled = false -- Tracks whether the forcefield effect is enabled
-
-    -- Function to customize character parts
-    local function customizeCharacter(character, newColor)
-    for _, part in ipairs(character:GetDescendants()) do
-        if part:IsA("BasePart") then
-            if forcefieldEnabled then
-                part.Color = newColor -- Apply the new color
-                part.Material = FORCEFIELD_MATERIAL -- Apply ForceField material
-            else
-                part.Material = DEFAULT_MATERIAL -- Default material
-                part.Color = DEFAULT_COLOR -- Default white color
-            end
-        end
-    end
-    end
-
-    -- Function to handle player character updates
-    local function onCharacterAdded(character)
-    if forcefieldEnabled then
-        customizeCharacter(character, currentColor)
-    end
-    end
-
-    -- Connection to handle new character spawns
-    player.CharacterAdded:Connect(onCharacterAdded)
-
-    -- UI Integration
-    LeftGroupBox:AddToggle('ForcefieldToggle', {
-    Text = 'Enable Forcefield',
-    Default = false, -- Default value (disabled)
-    Tooltip = 'Toggle the forcefield effect on your character.',
-
-    Callback = function(Value)
-        forcefieldEnabled = Value
-        print('[cb] Forcefield toggled:', Value)
-
-        -- Apply or remove forcefield effect immediately
-        local character = player.Character
-        if character then
-            customizeCharacter(character, currentColor)
-        end
-    end
-    })
-
-    LeftGroupBox:AddLabel('Forcefield Color'):AddColorPicker('ForcefieldColorPicker', {
-    Default = currentColor, -- Default color
-    Title = 'Select Forcefield Color',
-    Transparency = 0, -- Disable transparency changing
-
-    Callback = function(Value)
-        print('[cb] Forcefield color changed:', Value)
-
-        -- Update current color and apply the new color if the forcefield is enabled
-        currentColor = Value
-        local character = player.Character
-        if forcefieldEnabled and character then
-            customizeCharacter(character, currentColor)
-        end
-    end
-    })
-
-    -- Use RunService to update forcefield effect efficiently
-    RunService.Heartbeat:Connect(function()
-    if forcefieldEnabled then
-        local character = player.Character
-        if character then
-            customizeCharacter(character, currentColor)
-        end
-    end
-    end)
-
-RightGroupBox = Tabs.Visuals:AddRightGroupbox('Low GFX')
+local RightGroupBox = Tabs.Visuals:AddRightGroupbox('Game GFX Settings')
 
     MyButton = RightGroupBox:AddButton({
-    Text = 'Low GFX CANT BE REVERTED',
+    Text = 'Low GFX',
     Func = function()
         if not _G.Ignore then
             _G.Ignore = {} -- Add Instances to this table to ignore them (e.g. _G.Ignore = {workspace.Map, workspace.Map2})
@@ -3416,7 +3452,7 @@ RightGroupBox = Tabs.Visuals:AddRightGroupbox('Low GFX')
         
         StarterGui:SetCore("SendNotification", {
             Title = "Fps Booster Loaded",
-            Text = "Vilant Exploit",
+            Text = "Vilant Exploit V2",
             Duration = 5,
         })
         
@@ -3430,452 +3466,696 @@ RightGroupBox = Tabs.Visuals:AddRightGroupbox('Low GFX')
     Tooltip = 'Makes your Gfx low CANT BE REVERTED'
     })
 
-LeftGroupBox = Tabs.Teleport:AddLeftGroupbox('Teleports')
+    local lighting = game:GetService("Lighting")
+    local StarterGui = game:GetService("StarterGui")
+    local debris = game:GetService("Debris")
 
-MyButton = LeftGroupBox:AddButton({
-    Text = 'Bank',
-    Func = function()
-        teleportCFrame = CFrame.new(-442, 39, -284)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
+    -- Store common values in variables to minimize repetitive calls
+    local fogEnd = lighting.FogEnd
+    local fogStart = lighting.FogStart
 
-MyButton = LeftGroupBox:AddButton({
-    Text = 'Inside Bank',
-    Func = function()
-        teleportCFrame = CFrame.new(-443, 23, -284)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
-
-
-MyButton = LeftGroupBox:AddButton({
-    Text = 'Vault',
-    Func = function()
-        teleportCFrame = CFrame.new(-658, -30, -285)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
-
-MyButton = LeftGroupBox:AddButton({
-    Text = 'Mid Appartment Building',
-    Func = function()
-        teleportCFrame = CFrame.new(-323, 80, -299)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
-
-MyButton = LeftGroupBox:AddButton({
-    Text = 'Revolver',
-    Func = function()
-        teleportCFrame = CFrame.new(-634, 21, -132)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
-
-MyButton = LeftGroupBox:AddButton({
-    Text = 'LMG',
-    Func = function()
-        teleportCFrame = CFrame.new(-626, 23, -295)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
-
-MyButton = LeftGroupBox:AddButton({
-    Text = 'Swimming Pool',
-    Func = function()
-        teleportCFrame = CFrame.new(-847, 21, -279)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
-
-MyButton = LeftGroupBox:AddButton({
-    Text = 'Broken Fire Station',
-    Func = function()
-        teleportCFrame = CFrame.new(-1182, 28, -521)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
-
-MyButton = LeftGroupBox:AddButton({
-    Text = 'DownHill',
-    Func = function()
-        teleportCFrame = CFrame.new(-559, 8, -735)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
-
-MyButton = LeftGroupBox:AddButton({
-    Text = 'Military Base',
-    Func = function()
-        teleportCFrame = CFrame.new(-40, 65, -926)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
-
-MyButton = LeftGroupBox:AddButton({
-    Text = 'Uphill',
-    Func = function()
-        teleportCFrame = CFrame.new(481, 48, -602)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
-
-MyButton = LeftGroupBox:AddButton({
-    Text = 'Breaking Bad',
-    Func = function()
-        teleportCFrame = CFrame.new(598, 28, -214)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
-
-MyButton = LeftGroupBox:AddButton({
-    Text = 'Church',
-    Func = function()
-        teleportCFrame = CFrame.new(205, 21, -124)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
-
-MyButton = LeftGroupBox:AddButton({
-    Text = 'Police Station',
-    Func = function()
-        teleportCFrame = CFrame.new(-264, 21, -93)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
-
-MyButton = LeftGroupBox:AddButton({
-    Text = 'School',
-    Func = function()
-        teleportCFrame = CFrame.new(-594, 21, 173)  -- Change this to your desired coordinates
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(teleportCFrame)
-    end,
-    DoubleClick = false,
-    Tooltip = 'Teleports you to the Bank'
-})
-
-RightGroupBox = Tabs.Movement:AddRightGroupbox('Player Animations')
-
-    Players = game:GetService("Players")  -- Store the Players service in a variable
-    player = Players.LocalPlayer  -- Store the LocalPlayer in a variable
-
-    -- Base URL for the animation assets
-    animationBaseUrl = "http://www.roblox.com/asset/?id="
-
-    -- Table of animations with optimized base URL usage
-    animations = {
-    R15 = {
-        idle = animationBaseUrl .. "2510196951",
-        walk = animationBaseUrl .. "2510202577",
-        run = animationBaseUrl .. "2510198475",
-        jump = animationBaseUrl .. "2510197830",
-        climb = animationBaseUrl .. "2510192778",
-        fall = animationBaseUrl .. "2510195892",
-    },
-    Loser = {
-        idle = animationBaseUrl .. "782841498",
-        walk = animationBaseUrl .. "616168032",
-        run = animationBaseUrl .. "616163682",
-        jump = animationBaseUrl .. "1083218792",
-        climb = animationBaseUrl .. "1083439238",
-        fall = animationBaseUrl .. "707829716",
-    },
-    Astronaut = {
-        idle = animationBaseUrl .. "891621366",
-        jump = animationBaseUrl .. "891627522",
-        fall = animationBaseUrl .. "891617961",
-        walk = animationBaseUrl .. "891667138",
-        run = animationBaseUrl .. "891636393",
-        climb = animationBaseUrl .. "891609353",
-    },
-    Bubbly = {
-        idle = animationBaseUrl .. "910004836",
-        jump = animationBaseUrl .. "910016857",
-        fall = animationBaseUrl .. "910001910",
-        walk = animationBaseUrl .. "910034870",
-        run = animationBaseUrl .. "910025107",
-        climb = animationBaseUrl .. "940996062",
-    },
-    Cartoony = {
-        idle = animationBaseUrl .. "742637544",
-        jump = animationBaseUrl .. "742637942",
-        fall = animationBaseUrl .. "742637151",
-        walk = animationBaseUrl .. "742640026",
-        run = animationBaseUrl .. "742638842",
-        climb = animationBaseUrl .. "742636889",
-    },
-    Confident = {
-        idle = animationBaseUrl .. "1069977950",
-        jump = animationBaseUrl .. "1069984524",
-        fall = animationBaseUrl .. "1069973677",
-        walk = animationBaseUrl .. "1070017263",
-        run = animationBaseUrl .. "1070001516",
-        climb = animationBaseUrl .. "1069946257",
-    },
-    Cowboy = {
-        idle = animationBaseUrl .. "1014390418",
-        jump = animationBaseUrl .. "1014394726",
-        fall = animationBaseUrl .. "1014384571",
-        walk = animationBaseUrl .. "1014421541",
-        run = animationBaseUrl .. "1014401683",
-        climb = animationBaseUrl .. "1014380606",
-    },
-    Elder = {
-        idle = animationBaseUrl .. "845397899",
-        jump = animationBaseUrl .. "845398858",
-        fall = animationBaseUrl .. "845396048",
-        walk = animationBaseUrl .. "845403856",
-        run = animationBaseUrl .. "845386501",
-        climb = animationBaseUrl .. "845392038",
-    },
-    Knight = {
-        idle = animationBaseUrl .. "657595757",
-        jump = animationBaseUrl .. "658409194",
-        fall = animationBaseUrl .. "657600338",
-        walk = animationBaseUrl .. "657552124",
-        run = animationBaseUrl .. "657564596",
-        climb = animationBaseUrl .. "658360781",
-    },
-    Levitation = {
-        idle = animationBaseUrl .. "616006778",
-        jump = animationBaseUrl .. "616008936",
-        fall = animationBaseUrl .. "616005863",
-        walk = animationBaseUrl .. "616013216",
-        run = animationBaseUrl .. "616010382",
-        climb = animationBaseUrl .. "616003713",
-    },
-    Mage = {
-        idle = animationBaseUrl .. "707742142",
-        jump = animationBaseUrl .. "707853694",
-        fall = animationBaseUrl .. "707829716",
-        walk = animationBaseUrl .. "707897309",
-        run = animationBaseUrl .. "707861613",
-        climb = animationBaseUrl .. "707826056",
-    },
-    Ninja = {
-        idle = animationBaseUrl .. "656117400",
-        jump = animationBaseUrl .. "656117878",
-        fall = animationBaseUrl .. "656115606",
-        walk = animationBaseUrl .. "656121766",
-        run = animationBaseUrl .. "656118852",
-        climb = animationBaseUrl .. "656114359",
-    },
-    Patrol = {
-        idle = animationBaseUrl .. "1149612882",
-        jump = animationBaseUrl .. "1148811837",
-        fall = animationBaseUrl .. "1148863382",
-        walk = animationBaseUrl .. "1151231493",
-        run = animationBaseUrl .. "1150967949",
-        climb = animationBaseUrl .. "1148811837",
-    },
-    Pirate = {
-        idle = animationBaseUrl .. "750781874",
-        jump = animationBaseUrl .. "750782230",
-        fall = animationBaseUrl .. "750780242",
-        walk = animationBaseUrl .. "750785693",
-        run = animationBaseUrl .. "750783738",
-        climb = animationBaseUrl .. "750779899",
-    },
-    Popstar = {
-        idle = animationBaseUrl .. "1212900985",
-        jump = animationBaseUrl .. "1212954642",
-        fall = animationBaseUrl .. "1212900995",
-        walk = animationBaseUrl .. "1212980338",
-        run = animationBaseUrl .. "1212980348",
-        climb = animationBaseUrl .. "1213044953",
-    },
-    Princess = {
-        idle = animationBaseUrl .. "941003647",
-        jump = animationBaseUrl .. "941008832",
-        fall = animationBaseUrl .. "941000007",
-        walk = animationBaseUrl .. "941028902",
-        run = animationBaseUrl .. "941015281",
-        climb = animationBaseUrl .. "940996062",
-    },
-    Robot = {
-        idle = animationBaseUrl .. "616088211",
-        jump = animationBaseUrl .. "616090535",
-        fall = animationBaseUrl .. "616087089",
-        walk = animationBaseUrl .. "616095330",
-        run = animationBaseUrl .. "616091570",
-        climb = animationBaseUrl .. "616086039",
-    },
-    Sneaky = {
-        idle = animationBaseUrl .. "1132473842",
-        jump = animationBaseUrl .. "1132489853",
-        fall = animationBaseUrl .. "1132469004",
-        walk = animationBaseUrl .. "1132510133",
-        run = animationBaseUrl .. "1132494274",
-        climb = animationBaseUrl .. "1132461372",
-    },
-    Stylish = {
-        idle = animationBaseUrl .. "616136790",
-        jump = animationBaseUrl .. "616139451",
-        fall = animationBaseUrl .. "616134815",
-        walk = animationBaseUrl .. "616146177",
-        run = animationBaseUrl .. "616140816",
-        climb = animationBaseUrl .. "616133594",
-    },
-    Superhero = {
-        idle = animationBaseUrl .. "616111295",
-        jump = animationBaseUrl .. "616115533",
-        fall = animationBaseUrl .. "616108001",
-        walk = animationBaseUrl .. "616122287",
-        run = animationBaseUrl .. "616117076",
-        climb = animationBaseUrl .. "616104706",
-    },
-    Toy = {
-        idle = animationBaseUrl .. "782841498",
-        jump = animationBaseUrl .. "782847020",
-        fall = animationBaseUrl .. "782846423",
-        walk = animationBaseUrl .. "782843345",
-        run = animationBaseUrl .. "782842708",
-        climb = animationBaseUrl .. "782843869",
-    },
-    Vampire = {
-        idle = animationBaseUrl .. "1083445855",
-        jump = animationBaseUrl .. "1083455352",
-        fall = animationBaseUrl .. "1083443587",
-        walk = animationBaseUrl .. "1083473930",
-        run = animationBaseUrl .. "1083462077",
-        climb = animationBaseUrl .. "1083439238",
-    },
-    Werewolf = {
-        idle = animationBaseUrl .. "1083195517",
-        jump = animationBaseUrl .. "1083218792",
-        fall = animationBaseUrl .. "1083189019",
-        walk = animationBaseUrl .. "1083178339",
-        run = animationBaseUrl .. "1083216690",
-        climb = animationBaseUrl .. "1083182000",
-    },
-    Zombie = {
-        idle = animationBaseUrl .. "616158929",
-        jump = animationBaseUrl .. "616161997",
-        fall = animationBaseUrl .. "616157476",
-        walk = animationBaseUrl .. "616168032",
-        run = animationBaseUrl .. "616163682",
-        climb = animationBaseUrl .. "616156119",
-    },
-    RealisticZombie = {
-        idle = animationBaseUrl .. "3489171152",
-        jump = animationBaseUrl .. "616161997",
-        fall = animationBaseUrl .. "616157476",
-        walk = animationBaseUrl .. "3489174223",
-        run = animationBaseUrl .. "3489173414",
-        climb = animationBaseUrl .. "616156119", 
-    },
-    }
-
-    -- Function to apply animations based on the selected preset
-    local function applyAnimations(animate, preset)
-    -- Ensure the animation IDs are applied correctly
-    if animate and preset then
-        if animate.idle and animate.idle:FindFirstChild("Animation1") then
-            animate.idle.Animation1.AnimationId = preset.idle
-        else
-            warn("Idle animation or Animation1 not found")
-        end
-        
-        if animate.walk and animate.walk:FindFirstChild("WalkAnim") then
-            animate.walk.WalkAnim.AnimationId = preset.walk
-        else
-            warn("Walk animation or WalkAnim not found")
-        end
-
-        if animate.run and animate.run:FindFirstChild("RunAnim") then
-            animate.run.RunAnim.AnimationId = preset.run
-        else
-            warn("Run animation or RunAnim not found")
-        end
-
-        if animate.jump and animate.jump:FindFirstChild("JumpAnim") then
-            animate.jump.JumpAnim.AnimationId = preset.jump
-        else
-            warn("Jump animation or JumpAnim not found")
-        end
-
-        if animate.climb and animate.climb:FindFirstChild("ClimbAnim") then
-            animate.climb.ClimbAnim.AnimationId = preset.climb
-        else
-            warn("Climb animation or ClimbAnim not found")
-        end
-
-        if animate.fall and animate.fall:FindFirstChild("FallAnim") then
-            animate.fall.FallAnim.AnimationId = preset.fall
-        else
-            warn("Fall animation or FallAnim not found")
-        end
-    end
-    end
-
-    -- Function to apply the selected animation preset to the player's character
-    local function applySelectedAnimations(character)
-    -- Ensure the character has the Animate object
-    local animate = character:FindFirstChild("Animate")
-    if animate then
-        local selectedPreset = animations[currentAnimationPreset]  -- Use the preset based on the dropdown
-        applyAnimations(animate, selectedPreset)
-    end
-    end
-
-    -- Set up the dropdown to choose which animation preset to apply
-    RightGroupBox:AddDropdown('AnimationSelector', {
-    Values = {'R15', 'Loser', 'Astronaut', 'Bubbly', 'Cartoony', 'Confident', 'Cowboy', 'Elder', 'Knight', 'Levitation', 'Mage', 'Ninja', 'Patrol', 'Pirate', 'Popstar', 'Princess', 'Robot', 'Sneaky', 'Stylish', 'Superhero', 'Toy', 'Vampire', 'Werewolf', 'Zombie', 'RealisticZombie'}, -- Add new presets here if needed
-    Default = 1, -- Default option (R15)
-    Multi = false, -- Allow single selection only
-
-    Text = 'Select Animation',
-    Tooltip = 'Choose the animation you want to apply',
+    -- Create the toggle button (integrated from your provided example)
+    RightGroupBox:AddToggle('MyToggle', {
+    Text = 'no-fog',
+    Default = false, -- Default value (true / false)
+    Tooltip = 'This removes any kind of Fog from the game', -- Information shown when you hover over the toggle
 
     Callback = function(Value)
-        currentAnimationPreset = Value  -- Update the preset based on the dropdown selection
+        if Value then
+            -- Check if the fog removal has been executed before
+            if not _G.FogRemovalExecuted then
+                -- Store original fog settings
+                _G.OriginalFogSettings = {
+                    FogEnd = fogEnd,
+                    FogStart = fogStart,
+                }
+
+                lighting.FogEnd = 100000  -- Set this to a high value to push fog far away
+                lighting.FogStart = 0     -- Set this to 0 to ensure fog doesn't start close
+
+                local atmosphere = lighting:FindFirstChildOfClass("Atmosphere")
+                if atmosphere then
+                    atmosphere:Destroy()
+                end
+
+                _G.FogRemovalExecuted = true
+            end
+        else
+            if _G.FogRemovalExecuted then
+                lighting.FogEnd = _G.OriginalFogSettings.FogEnd
+                lighting.FogStart = _G.OriginalFogSettings.FogStart
+
+                _G.FogRemovalExecuted = false
+            end
+        end
+
+        print('[cb] MyToggle changed to:', Value)
     end
     })
 
-    -- Connect to Heartbeat and apply the animation every frame
-    game:GetService("RunService").Heartbeat:Connect(function()
-    if player.Character then
-        applySelectedAnimations(player.Character)  -- Apply the selected animation
+    RightGroupBox:AddToggle('MyToggle', {
+        Text = 'full-bright',
+        Default = false, -- Default value (true / false)
+        Tooltip = 'Removes shadows and increases brightness', -- Information shown when you hover over the toggle
+    
+        Callback = function(Value)
+            if not _G.FullBrightExecuted then
+                _G.FullBrightEnabled = false
+    
+                local Lighting = game:GetService("Lighting")
+                
+                -- Store default settings in a table
+                _G.NormalLightingSettings = {
+                    Brightness = Lighting.Brightness,
+                    ClockTime = Lighting.ClockTime,
+                    GlobalShadows = Lighting.GlobalShadows,
+                    Ambient = Lighting.Ambient
+                }
+    
+                -- Full Bright settings
+                local FullBrightSettings = {
+                    Brightness = 1,
+                    ClockTime = 12,
+                    GlobalShadows = false,
+                    Ambient = Color3.fromRGB(178, 178, 178)
+                }
+    
+                -- Set lighting properties
+                local function setLightingProperties(properties)
+                    for property, value in pairs(properties) do
+                        Lighting[property] = value
+                    end
+                end
+    
+                -- Initial setup
+                setLightingProperties(FullBrightSettings)
+    
+                -- Create a single function to handle property changes
+                local function createPropertyChangeListener(property, defaultValue, newValue)
+                    Lighting:GetPropertyChangedSignal(property):Connect(function()
+                        if Lighting[property] ~= defaultValue and Lighting[property] ~= _G.NormalLightingSettings[property] then
+                            _G.NormalLightingSettings[property] = Lighting[property]
+                            if not _G.FullBrightEnabled then
+                                repeat wait() until _G.FullBrightEnabled
+                            end
+                            Lighting[property] = newValue
+                        end
+                    end)
+                end
+    
+                -- Set up property listeners
+                for property, newValue in pairs(FullBrightSettings) do
+                    createPropertyChangeListener(property, newValue, newValue)
+                end
+    
+                -- Periodically toggle FullBright settings
+                local LatestValue = true
+                spawn(function()
+                    while wait() do
+                        if _G.FullBrightEnabled ~= LatestValue then
+                            if not _G.FullBrightEnabled then
+                                setLightingProperties(_G.NormalLightingSettings)
+                            else
+                                setLightingProperties(FullBrightSettings)
+                            end
+                            LatestValue = not LatestValue
+                        end
+                    end
+                end)
+            end
+    
+            -- Toggle full bright state
+            _G.FullBrightExecuted = true
+            _G.FullBrightEnabled = Value -- directly using Value here to toggle the state
+        end
+    })
+
+RightGroupBox:AddLabel('')
+
+local lighting = game:GetService("Lighting")
+local StarterGui = game:GetService("StarterGui")
+local runService = game:GetService("RunService")
+local debris = game:GetService("Debris")
+
+if not _G.OriginalLightingSettings then
+    _G.OriginalLightingSettings = {
+        Ambient = lighting.Ambient,
+        OutdoorAmbient = lighting.OutdoorAmbient,
+        Brightness = lighting.Brightness,
+        ColorShift_Bottom = lighting.ColorShift_Bottom,
+        ColorShift_Top = lighting.ColorShift_Top,
+        FogColor = lighting.FogColor,
+        FogStart = lighting.FogStart,
+        FogEnd = lighting.FogEnd,
+        TimeOfDay = lighting.TimeOfDay,
+        Skybox = lighting:FindFirstChildOfClass("Sky"), -- Ensure no errors if skybox doesn't exist
+        ClockTime = lighting.ClockTime
+    }
+end
+
+local selectedAmbientColor = _G.OriginalLightingSettings.Ambient
+local selectedOutdoorAmbientColor = _G.OriginalLightingSettings.OutdoorAmbient
+local selectedColorShiftBottom = _G.OriginalLightingSettings.ColorShift_Bottom
+local selectedColorShiftTop = _G.OriginalLightingSettings.ColorShift_Top
+local selectedFogColor = _G.OriginalLightingSettings.FogColor
+
+local skyboxAssetID = "rbxassetid://1294489738"
+
+-- Add the toggle for the royal purple ambience
+RightGroupBox:AddToggle('AmbienceToggle', {
+    Text = 'Ambient',
+    Default = false, -- Default value (true / false)
+    Tooltip = 'Toggle to switch between original and custom ambient lighting',
+
+    Callback = function(Value)
+        if Value then
+            -- Apply the altered custom ambient lighting settings
+            lighting.Ambient = selectedAmbientColor
+            lighting.OutdoorAmbient = selectedOutdoorAmbientColor
+            lighting.Brightness = 2
+            lighting.ColorShift_Bottom = selectedColorShiftBottom
+            lighting.ColorShift_Top = selectedColorShiftTop
+            lighting.FogColor = selectedFogColor
+            lighting.FogStart = 0
+            lighting.FogEnd = 500
+            lighting.TimeOfDay = "18:00:00"
+
+            -- Set a custom skybox for the custom ambience
+            local skybox = lighting:FindFirstChildOfClass("Sky")
+            if not skybox then
+                skybox = Instance.new("Sky")
+                skybox.Parent = lighting
+            end
+            skybox.SkyboxBk = skyboxAssetID
+            skybox.SkyboxDn = skyboxAssetID
+            skybox.SkyboxFt = skyboxAssetID
+            skybox.SkyboxLf = skyboxAssetID
+            skybox.SkyboxRt = skyboxAssetID
+            skybox.SkyboxUp = skyboxAssetID
+
+            -- Set the flag to indicate that the lighting has been altered
+            _G.AmbienceToggled = true
+
+            -- Immediately set the time of day to the current slider value when toggle is enabled
+            lighting.ClockTime = _G.ClockTimeOverride or 17 -- Default to the slider value if set
+        else
+            -- Reset the lighting back to the original settings
+            lighting.Ambient = _G.OriginalLightingSettings.Ambient
+            lighting.OutdoorAmbient = _G.OriginalLightingSettings.OutdoorAmbient
+            lighting.Brightness = _G.OriginalLightingSettings.Brightness
+            lighting.ColorShift_Bottom = _G.OriginalLightingSettings.ColorShift_Bottom
+            lighting.ColorShift_Top = _G.OriginalLightingSettings.ColorShift_Top
+            lighting.FogColor = _G.OriginalLightingSettings.FogColor
+            lighting.FogStart = _G.OriginalLightingSettings.FogStart
+            lighting.FogEnd = _G.OriginalLightingSettings.FogEnd
+            lighting.TimeOfDay = _G.OriginalLightingSettings.TimeOfDay
+
+            local sky = lighting:FindFirstChildOfClass("Sky")
+            if sky then
+                debris:AddItem(sky, 1) -- Use debris to clean up skybox instance
+            end
+
+            if _G.OriginalLightingSettings.Skybox then
+                local originalSkybox = _G.OriginalLightingSettings.Skybox:Clone()
+                originalSkybox.Parent = lighting
+            end
+
+            _G.AmbienceToggled = false
+        end
     end
+})
+
+RightGroupBox:AddSlider('BrightnessSlider', { 
+    Text = 'Brightness',
+    Default = 10,  -- Set initial brightness to 2 (adjust if needed)
+    Min = 0,
+    Max = 20,  -- Max brightness set to 20
+    Rounding = 1,
+    Compact = false,
+
+    Callback = function(Value)
+        -- Immediately change the lighting brightness live based on slider value
+        lighting.Brightness = Value
+    end
+})
+
+-- Add the slider to control fog end with max value set to 1000
+RightGroupBox:AddSlider('FogEndSlider', { 
+    Text = 'Fog End',
+    Default = 500,  -- Set initial fog end to 500 (adjust if needed)
+    Min = 100,
+    Max = 10000,  -- Max fog end set to 100000
+    Rounding = 0,
+    Compact = false,
+
+    Callback = function(Value)
+        lighting.FogEnd = Value
+    end
+})
+
+RightGroupBox:AddSlider('TimeOfDaySlider', { 
+    Text = 'Time of Day',
+    Default = 17,  -- Set initial time to 12:00 (adjust if needed)
+    Min = 0,
+    Max = 24,  -- 24-hour format for time of day
+    Rounding = 1,
+    Compact = false,
+
+    Callback = function(Value)
+        -- Lock the time of day client-side by setting it
+        if _G.AmbienceToggled then
+            lighting.ClockTime = Value
+            -- Save the desired value so it stays fixed
+            _G.ClockTimeOverride = Value
+        end
+    end
+})
+
+runService.Heartbeat:Connect(function()
+    if _G.AmbienceToggled and _G.ClockTimeOverride then
+        lighting.ClockTime = _G.ClockTimeOverride
+    end
+end)
+
+RightGroupBox:AddLabel('Ambient Color Picker'):AddColorPicker('AmbientColorPicker', {
+    Default = Color3.fromRGB(120, 81, 169),  -- Default royal purple
+    Title = 'Ambient Color',
+    Transparency = 0,  -- Optional
+
+    Callback = function(Value)
+        selectedAmbientColor = Value
+        if _G.AmbienceToggled then
+            lighting.Ambient = selectedAmbientColor
+        end
+    end
+})
+
+RightGroupBox:AddLabel('Outdoor Ambient Color Picker'):AddColorPicker('OutdoorAmbientColorPicker', {
+    Default = Color3.fromRGB(120, 81, 169),  -- Default color
+    Title = 'Select Outdoor Ambient Color',
+
+    Callback = function(Value)
+        selectedOutdoorAmbientColor = Value
+        if _G.AmbienceToggled then
+            lighting.OutdoorAmbient = selectedOutdoorAmbientColor
+        end
+    end
+})
+
+RightGroupBox:AddLabel('Color Shift Bottom Picker'):AddColorPicker('ColorShiftBottomPicker', {
+    Default = Color3.fromRGB(120, 81, 169),  -- Default color
+    Title = 'Select Color Shift Bottom',
+
+    Callback = function(Value)
+        selectedColorShiftBottom = Value
+        if _G.AmbienceToggled then
+            lighting.ColorShift_Bottom = selectedColorShiftBottom
+        end
+    end
+})
+
+RightGroupBox:AddLabel('Color Shift Top Picker'):AddColorPicker('ColorShiftTopPicker', {
+    Default = Color3.fromRGB(120, 81, 169),  -- Default color
+    Title = 'Select Color Shift Top',
+
+    Callback = function(Value)
+        selectedColorShiftTop = Value
+        if _G.AmbienceToggled then
+            lighting.ColorShift_Top = selectedColorShiftTop
+        end
+    end
+})
+
+RightGroupBox:AddLabel('Fog Color Picker'):AddColorPicker('FogColorPicker', {
+    Default = Color3.fromRGB(120, 81, 169),  -- Default color
+    Title = 'Select Fog Color',
+
+    Callback = function(Value)
+        selectedFogColor = Value
+        if _G.AmbienceToggled then
+            lighting.FogColor = selectedFogColor
+        end
+    end
+})
+
+RightGroupBox = Tabs.Visuals:AddRightGroupbox('Damage Settings')
+
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local UserInputService = game:GetService("UserInputService")
+    local TweenService = game:GetService("TweenService")
+    local Camera = game.Workspace.CurrentCamera
+    local RaycastParams = RaycastParams.new()
+    RaycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    RaycastParams.IgnoreWater = true
+
+    -- Settings
+    local font = Enum.Font.SourceSansBold
+    local baseSize = 32
+    local distance = 500 -- Maximum distance at which damage numbers will be visible
+    local animationDuration = 3 -- Time it takes for the number to slowly move upwards
+    local fadeDuration = 1 -- Time it takes for the number to fade away after floating
+    local maxOffset = 20 -- Maximum random offset for damage numbers
+
+    local isDamageNumbersEnabled = false  -- Toggle state for enabling/disabling damage numbers
+    local damageColor = Color3.fromRGB(255, 255, 255)  -- Default red color for damage numbers
+
+    -- Previous health of the nearest player
+    local previousHealth = {}
+
+    -- Function to check if a player is behind a wall
+    local function isPlayerVisible(player)
+        if not player.Character or not player.Character:FindFirstChild("Head") then return false end
+        local head = player.Character.Head
+        local origin = Camera.CFrame.Position
+        local direction = (head.Position - origin).Unit * (head.Position - origin).Magnitude
+        RaycastParams.FilterDescendantsInstances = {Players.LocalPlayer.Character}
+        local result = workspace:Raycast(origin, direction, RaycastParams)
+        return not result or result.Instance:IsDescendantOf(player.Character)
+    end
+
+    -- Function to get the player nearest to the cursor with visibility check
+    local function getNearestToCursor()
+        local mouseLocation = UserInputService:GetMouseLocation()
+        local nearestPlayer
+        local shortestDistance = math.huge
+
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= Players.LocalPlayer and player.Character and player.Character:FindFirstChild("Head") and isPlayerVisible(player) then
+                local head = player.Character.Head
+                local screenPosition, onScreen = Camera:WorldToViewportPoint(head.Position)
+                if onScreen then
+                    local distanceToCursor = (Vector2.new(screenPosition.X, screenPosition.Y) - mouseLocation).Magnitude
+                    if distanceToCursor < shortestDistance then
+                        shortestDistance = distanceToCursor
+                        nearestPlayer = player
+                    end
+                end
+            end
+        end
+        return nearestPlayer
+    end
+
+    -- Function to create damage number display
+    local function createDamageDisplay(player, damageAmount)
+        if not isDamageNumbersEnabled then return end
+
+        local head = player.Character and player.Character:FindFirstChild("Head")
+        if head then
+            local damageContainer = head:FindFirstChild("DamageContainer")
+            if not damageContainer then
+                damageContainer = Instance.new("BillboardGui")
+                damageContainer.Name = "DamageContainer"
+                damageContainer.Parent = head
+                damageContainer.Adornee = head
+                damageContainer.Size = UDim2.new(0, 100, 0, 50)
+                damageContainer.StudsOffset = Vector3.new(0, 2, 0)
+                damageContainer.AlwaysOnTop = true
+                damageContainer.MaxDistance = distance
+                damageContainer.Enabled = true
+            end
+
+            -- Create the new damage number label
+            local textLabel = Instance.new("TextLabel")
+            textLabel.Parent = damageContainer
+            textLabel.Text = tostring(damageAmount)
+            textLabel.TextColor3 = damageColor
+            textLabel.TextSize = baseSize + (damageAmount / 10) -- Scale size based on damage
+            textLabel.Font = font
+            textLabel.BackgroundTransparency = 1
+            textLabel.Size = UDim2.new(1, 0, 0, baseSize)
+            textLabel.TextStrokeTransparency = 0.4
+            textLabel.Position = UDim2.new(0.5, -50 + math.random(-maxOffset, maxOffset), 0, math.random(-maxOffset, maxOffset)) -- Random offset
+
+            -- Target position for the damage number to slowly move upwards
+            local targetPosition = UDim2.new(0.5, -50, 0, -100) -- Final position for all damage numbers
+
+            -- Create the upward movement tween
+            local moveUpTween = TweenService:Create(
+                textLabel, 
+                TweenInfo.new(animationDuration, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), 
+                {Position = targetPosition}
+            )
+
+            -- Create the fade-out tween
+            local fadeOutTween = TweenService:Create(
+                textLabel,
+                TweenInfo.new(fadeDuration, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+                {TextTransparency = 1, TextStrokeTransparency = 1} -- Fade both text and stroke
+            )
+
+            -- Play the move-up tween
+            moveUpTween:Play()
+
+            -- Once the move-up animation is completed, start fading out
+            moveUpTween.Completed:Connect(function()
+                fadeOutTween:Play()
+
+                -- Destroy the label after the fade-out is complete
+                fadeOutTween.Completed:Connect(function()
+                    textLabel:Destroy()
+                end)
+            end)
+        end
+    end
+
+    -- Function to check and display damage numbers for the nearest player
+    local function checkNearestPlayerDamage()
+        local nearestPlayer = getNearestToCursor()
+
+        if nearestPlayer and nearestPlayer.Character and nearestPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            local humanoid = nearestPlayer.Character:FindFirstChildOfClass("Humanoid")
+            local currentHealth = humanoid.Health
+
+            -- Get the previous health of the player, or set it to their current health if not tracked
+            local prevHealth = previousHealth[nearestPlayer.UserId] or currentHealth
+
+            -- If the player has lost health, display the damage number
+            if currentHealth < prevHealth and isDamageNumbersEnabled then
+                createDamageDisplay(nearestPlayer, math.floor(prevHealth - currentHealth))
+            end
+
+            -- Update the player's previous health
+            previousHealth[nearestPlayer.UserId] = currentHealth
+        end
+    end
+
+    -- Run every frame to check the nearest player's health
+    RunService.RenderStepped:Connect(checkNearestPlayerDamage)
+
+    -- Integrating UI Toggle for enabling/disabling damage numbers and Color Picker
+    RightGroupBox:AddToggle('DamageNumbersToggle', {
+        Text = 'Damage numbers',
+        Default = false, -- Default value (false so it doesn't show on script execution)
+        Tooltip = 'Shows damage dealt with numbers',
+        Callback = function(Value)
+            isDamageNumbersEnabled = Value
+        end
+    })
+
+    RightGroupBox:AddLabel('numbers color'):AddColorPicker('DamageColorPicker', {
+        Default = damageColor, -- Default color for damage numbers
+        Title = 'Number Color', -- Title of the color picker
+        Transparency = 0, -- Enable transparency control for the color picker
+        Callback = function(Value)
+            damageColor = Value
+        end
+    })
+
+    Options.DamageColorPicker:OnChanged(function()
+        print('Damage Number Color changed to:', Options.DamageColorPicker.Value)
     end)
+
+RightGroupBox:AddLabel('')
+
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local UserInputService = game:GetService("UserInputService")
+    local Camera = game.Workspace.CurrentCamera
+    local RaycastParams = RaycastParams
+    RaycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    RaycastParams.IgnoreWater = true
+    
+    -- Settings
+    local soundOptions = {
+        Ding = "rbxassetid://8578195318",
+        Hitmarker = "rbxassetid://9116483270",
+        Fortnite_Headshot = "rbxassetid://2513174484"
+    }
+    
+    local currentHitSoundId = soundOptions.Ding  -- Default sound
+    local soundVolume = 1  -- Volume of the hit sound
+    local previousHealth = {}  -- Store previous health of players
+    local isHitSoundEnabled = false  -- Default state of the hit sound toggle
+    
+    -- Function to check if a player is visible
+    local function isPlayerVisible(player)
+        local character = player.Character
+        local head = character and character:FindFirstChild("Head")
+        if not head then return false end
+    
+        local origin = Camera.CFrame.Position
+        local direction = (head.Position - origin).Unit * (head.Position - origin).Magnitude
+        RaycastParams.FilterDescendantsInstances = {Players.LocalPlayer.Character}
+        local result = workspace:Raycast(origin, direction, RaycastParams)
+        return not result or result.Instance:IsDescendantOf(character)
+    end
+    
+    -- Function to get the nearest player to the cursor with visibility check
+    local function getNearestToCursor()
+        local mouseLocation = UserInputService:GetMouseLocation()
+        local nearestPlayer, shortestDistance = nil, math.huge
+    
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= Players.LocalPlayer then
+                local character = player.Character
+                if character and character:FindFirstChild("Head") and isPlayerVisible(player) then
+                    local head = character.Head
+                    local screenPosition, onScreen = Camera:WorldToViewportPoint(head.Position)
+                    if onScreen then
+                        local distanceToCursor = (Vector2.new(screenPosition.X, screenPosition.Y) - mouseLocation).Magnitude
+                        if distanceToCursor < shortestDistance then
+                            shortestDistance = distanceToCursor
+                            nearestPlayer = player
+                        end
+                    end
+                end
+            end
+        end
+    
+        return nearestPlayer
+    end
+    
+    -- Function to play the hit sound on the nearest player when they take damage
+    local function playHitSound(player)
+        if not isHitSoundEnabled then return end  -- Only proceed if the hit sound is enabled
+    
+        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            local currentHealth = humanoid.Health
+            local prevHealth = previousHealth[player.UserId] or currentHealth
+    
+            -- If the player has lost health, play the hit sound
+            if currentHealth < prevHealth then
+                local sound = Instance.new("Sound")
+                sound.SoundId = currentHitSoundId
+                sound.Volume = soundVolume
+                sound.Parent = player.Character:FindFirstChild("Head")
+                sound:Play()
+                sound.Ended:Connect(function()
+                    sound:Destroy()
+                end)
+            end
+    
+            -- Update the player's previous health
+            previousHealth[player.UserId] = currentHealth
+        end
+    end
+    
+    -- Run every frame to check the nearest player's health
+    local function checkNearestPlayerDamage()
+        local nearestPlayer = getNearestToCursor()
+        if nearestPlayer then
+            playHitSound(nearestPlayer)
+        end
+    end
+    
+    RunService.RenderStepped:Connect(checkNearestPlayerDamage)
+    
+    -- Toggle for enabling/disabling hit sound
+    RightGroupBox:AddToggle('HitSoundsToggle', {
+        Text = 'Hit Sounds',
+        Default = false,  -- Default value (false so it doesn't play the sound initially)
+        Tooltip = 'Plays a sound when a player takes damage',
+        Callback = function(Value)
+            isHitSoundEnabled = Value
+        end
+    })
+    
+    -- Dropdown for selecting hit sound, positioned under the toggle
+    RightGroupBox:AddDropdown('SoundDropdown', {
+        Values = { 'Ding', 'Hitmarker', 'Fortnite_Headshot' },
+        Default = 1,
+        Multi = false,
+        Text = 'Hit Sound',
+        Tooltip = 'Choose a sound to play when you hit players',
+        Callback = function(Value)
+            currentHitSoundId = soundOptions[Value]
+        end
+    })  
+
+RightGroupBox = Tabs.Misc:AddRightGroupbox('Auto Redeem Codes')
+
+MyButton = RightGroupBox:AddButton({
+    Text = 'Redeem All Codes',
+    Func = function()
+        local codes = {
+            "SHRIMP",
+            "VIP",
+            "2025",
+            "DACARNIVAL",
+            "RUBY",
+            "THANKSGIVING24",
+            "HALLOWEEN2024",
+            "pumpkins2023",
+            "TRADEME!",
+            "Beary",
+            "ShortCake",
+            "DAUP"
+        }
+        
+        -- Table to track successful codes
+        local successfulCodes = {}
+        
+        -- Function to redeem a code
+        local function redeemCode(code)
+            -- Arguments for the server event
+            local args = {
+                [1] = "EnterPromoCode",
+                [2] = code
+            }
+        
+            -- Fire the server event
+            game:GetService("ReplicatedStorage").MainEvent:FireServer(unpack(args))
+        
+            -- Wait for response or success (adjust the response as needed)
+            local successIndicator = false
+            game:GetService("ReplicatedStorage").MainEvent.OnClientEvent:Connect(function(response)
+                if response == "CodeRedeemed" then  -- Adjust response check as per actual server logic
+                    successIndicator = true
+                end
+            end)
+        
+            -- Wait for a short time before proceeding to next code
+            wait(6)  -- 6 second wait between attempts (you can adjust this)
+        
+            -- If successfully redeemed, log the code
+            if successIndicator then
+                table.insert(successfulCodes, code)
+            end
+        
+            print("Attempted to redeem code: " .. code)
+        end
+        
+        -- Attempt to redeem each code
+        for _, code in ipairs(codes) do
+            redeemCode(code)
+        end        
+    end,
+    DoubleClick = false,
+    Tooltip = 'Redeems Active codes in the game'
+})
 
 watermarkVisible = true  -- Boolean to track watermark visibility
 Library:SetWatermarkVisibility(watermarkVisible)  -- Set initial visibility to true
 
+-- Function to toggle the watermark visibility
 function toggleWatermarkVisibility(Value)
     watermarkVisible = Value  -- Update the visibility state
     Library:SetWatermarkVisibility(watermarkVisible)  -- Apply the new visibility
 end
 
+-- FPS and Ping display update
 FrameTimer = tick()
 FrameCounter = 0
 FPS = 60
@@ -3895,7 +4175,7 @@ WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(functi
 
     -- Update watermark with FPS and Ping
     local ping = math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
-    Library:SetWatermark(('Vilant v1.8 | %s fps | %s ms'):format(
+    Library:SetWatermark(('Vilant Exploit V2 | %s fps | %s ms'):format(
         math.floor(FPS),
         ping
     ))
